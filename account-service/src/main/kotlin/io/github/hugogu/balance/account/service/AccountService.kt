@@ -3,9 +3,10 @@ package io.github.hugogu.balance.account.service
 import io.github.hugogu.balance.common.model.TransactionMessage
 import io.github.hugogu.balance.account.repo.AccountEntity
 import io.github.hugogu.balance.account.repo.AccountRepo
+import io.github.hugogu.balance.account.repo.TransactionLogEntity
+import io.github.hugogu.balance.account.repo.TransactionLogRepo
 import io.github.hugogu.balance.account.service.error.AccountNotFoundException
 import org.springframework.data.redis.core.RedisTemplate
-import org.springframework.retry.annotation.Retryable
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Isolation
 import org.springframework.transaction.annotation.Transactional
@@ -16,6 +17,7 @@ import java.util.concurrent.TimeUnit
 @Service
 class AccountService(
     private val accountRepo: AccountRepo,
+    private val transactionLogRepo: TransactionLogRepo,
     private val redisTemplate: RedisTemplate<String, String>
 ) {
     @Transactional
@@ -37,6 +39,7 @@ class AccountService(
         val isLocked = redisTemplate.opsForValue().setIfAbsent(lockKey, "locked", 10, TimeUnit.SECONDS)
         if (isLocked == true) {
             try {
+                transactionLogRepo.save(TransactionLogEntity(transaction))
                 accountRepo.handleTransaction(transaction)
             } finally {
                 redisTemplate.delete(lockKey)

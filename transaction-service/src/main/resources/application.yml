@@ -1,3 +1,6 @@
+server:
+  port: 8082
+
 spring:
   application:
     name: real-balance-transaction
@@ -13,6 +16,10 @@ spring:
     bootstrap-servers: localhost:29092
     producer:
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+
+account:
+  service:
+    url: http://localhost:8080/
 
 management:
   endpoints:

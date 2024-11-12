@@ -10,8 +10,13 @@ import org.hibernate.annotations.Type
 
 @Entity
 @Table(name = "transaction_log")
-class TransactionLogEntity : EntityBase() {
+class TransactionLogEntity() : EntityBase() {
     @Type(JsonBinaryType::class)
     @Column(columnDefinition = "jsonb")
     lateinit var transactionData: TransactionMessage
+
+    constructor(transactionData: TransactionMessage) : this() {
+        this.transactionData = transactionData
+        this.setId(transactionData.transactionId)
+    }
 }
