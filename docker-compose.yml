@@ -1,0 +1,60 @@
+version: '3'
+services:
+  transaction-service-api:
+    image: transaction-service:0.0.1-SNAPSHOT
+    ports:
+      - "8082:8082"
+      - "5005:5005"
+    environment:
+      # Used only when the value are specific to the environment.
+      - SERVER_PORT=8082
+      - JAVA_TOOL_OPTIONS=-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005
+    depends_on:
+      - postgres
+  account-service-api:
+    image: account-service:0.0.1-SNAPSHOT
+    ports:
+      - "8080:8080"
+    environment:
+      - JAVA_TOOL_OPTIONS=-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005
+    depends_on:
+      - postgres
+  postgres:
+    image: "postgres:17-alpine"
+    hostname: postgres
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_DB=account
+      - POSTGRES_PASSWORD=postgres
+    volumes:
+      - ./tmp/pgdata:/var/lib/postgresql/data
+
+  redis:
+    image: "redis:7-alpine"
+    hostname: redis
+    ports:
+      - "6379:6379"
+    restart: unless-stopped
+
+  kafka:
+    image: wurstmeister/kafka:2.12-2.4.1
+    expose:
+      - '29092'
+    ports:
+      - "9092:9092"
+      - "29092:29092"
+    environment:
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,LOCAL://0.0.0.0:29092
+      # When it is used for local, `localhost` shall be used.
+      # When it is used within docker, `kafka` shall be used.
+      # Use 9092 from docker host, 29092 from local host
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,LOCAL://localhost:29092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: LOCAL:PLAINTEXT,PLAINTEXT:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_CREATE_TOPICS: "Transaction:1:1"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    restart: unless-stopped
+

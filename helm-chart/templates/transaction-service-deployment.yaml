@@ -1,0 +1,28 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: transaction-service
+spec:
+  replicas: {{ .Values.transactionService.replicas }}
+  selector:
+    matchLabels:
+      app: transaction-service
+  template:
+    metadata:
+      labels:
+        app: transaction-service
+    spec:
+      containers:
+        - name: transaction-service
+          image: {{ .Values.transactionService.image }}
+          ports:
+            - containerPort: 8080
+          env:
+            - name: DB_HOST
+              value: {{ .Values.transactionService.db.host }}
+            - name: SPRING_DATASOURCE_USERNAME
+              value: {{ .Values.transactionService.db.user }}
+            - name: SPRING_DATASOURCE_PASSWORD
+              value: {{ .Values.transactionService.db.password }}
+          livenessProbe: {{ toYaml .Values.probes.liveness | nindent 12 }}
+          readinessProbe: {{ toYaml .Values.probes.readiness | nindent 12 }}

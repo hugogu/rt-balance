@@ -1,0 +1,28 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: account-service
+spec:
+  replicas: {{ .Values.accountService.replicas }}
+  selector:
+    matchLabels:
+      app: account-service
+  template:
+    metadata:
+      labels:
+        app: account-service
+    spec:
+      containers:
+        - name: account-service
+          image: {{ .Values.accountService.image }}
+          ports:
+            - containerPort: 8080
+          env:
+            - name: DB_HOST
+              value: {{ .Values.accountService.db.host }}
+            - name: SPRING_DATASOURCE_USERNAME
+              value: {{ .Values.accountService.db.user }}
+            - name: SPRING_DATASOURCE_PASSWORD
+              value: {{ .Values.accountService.db.password }}
+          livenessProbe: {{ toYaml .Values.probes.liveness | nindent 12 }}
+          readinessProbe: {{ toYaml .Values.probes.readiness | nindent 12 }}

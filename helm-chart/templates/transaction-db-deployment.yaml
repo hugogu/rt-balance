@@ -1,0 +1,26 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: transaction-db
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: transaction-db
+  template:
+    metadata:
+      labels:
+        app: transaction-db
+    spec:
+      containers:
+        - name: postgres
+          image: {{ .Values.postgres.image }}
+          ports:
+            - containerPort: 5432
+          env:
+            - name: POSTGRES_DB
+              value: {{ .Values.postgres.transactionDb.name }}
+            - name: POSTGRES_USER
+              value: {{ .Values.postgres.transactionDb.user }}
+            - name: POSTGRES_PASSWORD
+              value: {{ .Values.postgres.transactionDb.password }}

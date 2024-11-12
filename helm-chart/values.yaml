@@ -1,0 +1,41 @@
+accountService:
+  image: account-service:0.0.1-SNAPSHOT
+  replicas: 3
+  db:
+    host: account-db
+    user: postgres
+    password: postgres
+
+transactionService:
+  image: transaction-service:0.0.1-SNAPSHOT
+  replicas: 3
+  db:
+    host: transaction-db
+    user: postgres
+    password: postgres
+
+postgres:
+  image: postgres:13
+  accountDb:
+    name: account
+    user: postgres
+    password: postgres
+  transactionDb:
+    name: transaction
+    user: postgres
+    password: postgres
+
+probes:
+  liveness:
+    httpGet:
+      path: /actuator/health/liveness
+      port: 8080
+    initialDelaySeconds: 30
+    periodSeconds: 10
+  readiness:
+    httpGet:
+      path: /actuator/health/readiness
+      port: 8080
+    initialDelaySeconds: 30
+    periodSeconds: 10
+

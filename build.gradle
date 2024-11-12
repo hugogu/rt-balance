@@ -1,0 +1,89 @@
+plugins {
+    id 'org.jetbrains.kotlin.jvm' version '1.9.25'
+    id 'org.jetbrains.kotlin.plugin.spring' version '1.9.25'
+    id 'org.springframework.boot' version '3.2.11'
+    id 'io.spring.dependency-management' version '1.1.6'
+    id 'org.jetbrains.kotlin.plugin.jpa' version '1.9.25'
+}
+
+group = 'io.github.hugogu'
+version = '0.0.1-SNAPSHOT'
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(17)
+    }
+}
+
+repositories {
+    mavenCentral()
+}
+
+subprojects {
+    apply plugin: 'io.spring.dependency-management'
+    apply plugin: 'org.jetbrains.kotlin.jvm'
+    apply plugin: 'org.jetbrains.kotlin.plugin.spring'
+    apply plugin: 'org.springframework.boot'
+
+    group = 'io.github.hugogu'
+    version = '0.0.1-SNAPSHOT'
+
+    java {
+        toolchain {
+            languageVersion = JavaLanguageVersion.of(17)
+        }
+    }
+
+    kotlin {
+        compilerOptions {
+            freeCompilerArgs.addAll '-Xjsr305=strict'
+            freeCompilerArgs.addAll '-Xjvm-default=all'
+        }
+    }
+
+    repositories {
+        mavenCentral()
+    }
+
+    bootBuildImage {
+        createdDate = "now"
+        environment = System.getenv().findAll { key, value -> key.startsWith('DOCKER_') }
+    }
+
+    dependencyManagement {
+        imports {
+            mavenBom "org.springframework.cloud:spring-cloud-dependencies:2023.0.3"
+        }
+    }
+
+    dependencies {
+        implementation 'org.springframework.boot:spring-boot-starter-actuator'
+        implementation 'org.springframework.boot:spring-boot-starter-cache'
+        implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+        implementation 'org.springframework.boot:spring-boot-starter-web'
+        implementation 'com.fasterxml.jackson.module:jackson-module-kotlin'
+        implementation 'org.javamoney:moneta:1.4.2'
+        implementation 'org.zalando:jackson-datatype-money:1.3.0'
+        implementation 'nl.hiddewieringa:money-kotlin:1.0.1'
+        implementation 'org.hibernate:hibernate-core:6.6.2.Final'
+        implementation 'org.flywaydb:flyway-core'
+        implementation 'org.jetbrains.kotlin:kotlin-reflect'
+        implementation 'org.springframework.kafka:spring-kafka'
+        runtimeOnly 'io.micrometer:micrometer-registry-prometheus'
+        runtimeOnly 'org.postgresql:postgresql'
+        testImplementation 'org.springframework.boot:spring-boot-starter-test'
+        testImplementation 'org.jetbrains.kotlin:kotlin-test-junit5'
+        testImplementation 'org.springframework.kafka:spring-kafka-test'
+        testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+    }
+
+    tasks.named('test') {
+        useJUnitPlatform()
+    }
+}
+
+allOpen {
+    annotation 'jakarta.persistence.Entity'
+    annotation 'jakarta.persistence.MappedSuperclass'
+    annotation 'jakarta.persistence.Embeddable'
+}

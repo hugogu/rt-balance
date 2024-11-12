@@ -1,0 +1,6 @@
+account:
+  service:
+    url: http://localhost:8080
+logging:
+  level:
+    root: debug

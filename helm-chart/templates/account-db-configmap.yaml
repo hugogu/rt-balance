@@ -1,0 +1,11 @@
+# helm-chart/templates/db-init-configmap.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: db-init-script
+data:
+  init-db.sh: |
+    #!/bin/bash
+    psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" <<-EOSQL
+      CREATE DATABASE accountdb;
+    EOSQL
