@@ -1,6 +1,7 @@
 package io.github.hugogu.balance.transaction.client
 
 import io.github.hugogu.balance.common.model.TransactionMessage
+import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
@@ -16,6 +17,7 @@ import kotlin.test.assertNotNull
 )
 @ComponentScan("io.github.hugogu.balance.common")
 @ActiveProfiles("test")
+@Tag("integration")
 class AccountServiceClientIntegrationTest {
 
     @Autowired
