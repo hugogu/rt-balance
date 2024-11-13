@@ -1,3 +1,7 @@
+ingress:
+  enabled: true
+  host: example.com
+
 accountService:
   image: account-service:0.0.1-SNAPSHOT
   replicas: 3

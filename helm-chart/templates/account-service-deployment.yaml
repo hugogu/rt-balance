@@ -17,6 +17,13 @@ spec:
           image: {{ .Values.accountService.image }}
           ports:
             - containerPort: 8080
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "500m"
+            limits:
+              memory: "1024Mi"
+              cpu: "1024m"
           env:
             - name: DB_HOST
               value: {{ .Values.accountService.db.host }}

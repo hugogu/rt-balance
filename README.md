@@ -45,6 +45,7 @@
     kubectl port-forward svc/transaction-db 5434:5432
     kubectl port-forward svc/account-service 8080:8080
     kubectl port-forward svc/transaction-service 8081:8080
+    kubectl port-forward svc/ingress-nginx-controller 8080:80
     ```
      OR using minikube if the k8s cluster was in local.
     ```bash
@@ -87,14 +88,25 @@ That would require a more complex setup, please refer to the [load-testing](./lo
 
 ### Install required tools for local development
   ```shell
+  brew install helm
   brew install minikube
   minikube start
-
-  brew install helm
   kubectl config use-context minikube
   # This is required to enable HPA in kubernetes
   minikube addons enable metrics-server
   minikube dashboard
+  ```
+* Introduce Ingress for the use in helm
+  ```shell
+  helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
+  helm repo update
+  helm install ingress-nginx ingress-nginx/ingress-nginx
+  ```
+* Introduce Prometheus for the use in helm
+  ```shell
+  helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+  helm repo update
+  helm install prometheus prometheus-community/prometheus
   ```
 
 ### Install Tools for stress testing
