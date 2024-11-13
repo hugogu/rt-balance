@@ -25,7 +25,7 @@ transactionService:
     targetCPUUtilizationPercentage: 50
 
 postgres:
-  image: postgres:13
+  image: postgres:17-alpine
   accountDb:
     name: account
     user: postgres

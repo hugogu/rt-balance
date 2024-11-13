@@ -1,9 +1,7 @@
 rootProject.name = 'real-balance'
 
 include(":common")
-include(":web-portal")
 include(":account-service")
 include(":transaction-service")
 include(":test-results")
-include(":gateway")
 
