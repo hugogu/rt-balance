@@ -16,8 +16,11 @@ services:
     ports:
       - "8080:8080"
     environment:
+      - DB_HOST=postgres
+      - SPRING_DATA_REDIS_HOST=redis
       - JAVA_TOOL_OPTIONS=-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005
     depends_on:
+      - redis
       - postgres
   postgres:
     image: "postgres:17-alpine"
@@ -57,4 +60,48 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
     restart: unless-stopped
+
+# The following components are used for monitoring the application in stress test and resiliency test.
+# In production, these components are not required as production may have its own monitoring tools.
+
+  prometheus:
+    image: prom/prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./load-testing/prometheus:/etc/prometheus/
+    command:
+      - '--web.enable-remote-write-receiver'
+      - '--config.file=/etc/prometheus/prometheus.yml'
+
+  grafana:
+    image: grafana/grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_AUTH_ANONYMOUS_ORG_ROLE=Admin
+      - GF_AUTH_ANONYMOUS_ENABLED=true
+      - GF_AUTH_BASIC_ENABLED=false
+      - INFLUXDB_API_TOKEN=secret_token
+      - INFLUXDB_ORG=Hugo
+      - INFLUXDB_DEFAULT_BUCKET=k6
+    volumes:
+      - ./load-testing/grafana:/etc/grafana/provisioning/
+
+  influxdb:
+    image: influxdb:2.7
+    ports:
+      - "8086:8086"
+    environment:
+      - INFLUXD_LOG_LEVEL=debug
+      - INFLUXD_HTTP_BIND_ADDRESS=:8086
+      - DOCKER_INFLUXDB_INIT_MODE=setup
+      - DOCKER_INFLUXDB_INIT_USERNAME=root
+      - DOCKER_INFLUXDB_INIT_PASSWORD=password
+      - DOCKER_INFLUXDB_INIT_ORG=Hugo
+      - DOCKER_INFLUXDB_INIT_BUCKET=k6
+      - DOCKER_INFLUXDB_INIT_ADMIN_TOKEN=secret_token
+      - DOCKER_INFLUXD_SESSION_LENGTH=1440
+    volumes:
+      - ./tmp/influxdb:/var/lib/influxdb
 
