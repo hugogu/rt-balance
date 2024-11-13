@@ -1,4 +1,4 @@
-# Realtime Balance System
+# Realtime Balance System ![CICD Status](https://github.com/hugogu/rt-balance/actions/workflows/build-and-test.yml/badge.svg)
 
 ## Build
 
