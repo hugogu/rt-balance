@@ -5,6 +5,11 @@ accountService:
     host: account-db
     user: postgres
     password: postgres
+  hpa:
+    enabled: true
+    minReplicas: 1
+    maxReplicas: 10
+    targetCPUUtilizationPercentage: 50
 
 transactionService:
   image: transaction-service:0.0.1-SNAPSHOT
@@ -13,6 +18,11 @@ transactionService:
     host: transaction-db
     user: postgres
     password: postgres
+  hpa:
+    enabled: true
+    minReplicas: 1
+    maxReplicas: 10
+    targetCPUUtilizationPercentage: 50
 
 postgres:
   image: postgres:13

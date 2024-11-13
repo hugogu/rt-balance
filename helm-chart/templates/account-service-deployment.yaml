@@ -26,3 +26,38 @@ spec:
               value: {{ .Values.accountService.db.password }}
           livenessProbe: {{ toYaml .Values.probes.liveness | nindent 12 }}
           readinessProbe: {{ toYaml .Values.probes.readiness | nindent 12 }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: account-service
+spec:
+  selector:
+    app: account-service
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 8080
+
+{{- if .Values.accountService.hpa.enabled }}
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: account-hpa
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: account-service
+  minReplicas: {{ .Values.accountService.hpa.minReplicas }}
+  maxReplicas: {{ .Values.accountService.hpa.maxReplicas }}
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: {{ .Values.accountService.hpa.targetCPUUtilizationPercentage }}
+{{- end }}
+

@@ -24,3 +24,17 @@ spec:
               value: {{ .Values.postgres.transactionDb.user }}
             - name: POSTGRES_PASSWORD
               value: {{ .Values.postgres.transactionDb.password }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: transaction-db
+spec:
+  type: NodePort
+  selector:
+    app: transaction-db
+  ports:
+    - protocol: TCP
+      port: 5432
+      targetPort: 5432
+      nodePort: 30008
