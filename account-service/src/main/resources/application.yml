@@ -12,12 +12,28 @@ spring:
     bootstrap-servers: localhost:29092
     producer:
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
-  redis:
-    host: localhost
-    port: 6379
+  data:
+    redis:
+      host: localhost
+      port: 6379
 
 management:
   endpoints:
     web:
       exposure:
         include: "*"
+  endpoint:
+    health:
+      probes:
+        enabled: true
+
+logging:
+  level:
+    org:
+      hibernate:
+        engine:
+          jdbc:
+            spi: ERROR
+      springframework:
+        retry:
+          support: INFO

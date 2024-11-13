@@ -40,12 +40,12 @@ probes:
     httpGet:
       path: /actuator/health/liveness
       port: 8080
-    initialDelaySeconds: 30
+    initialDelaySeconds: 20
     periodSeconds: 10
   readiness:
     httpGet:
       path: /actuator/health/readiness
       port: 8080
-    initialDelaySeconds: 30
+    initialDelaySeconds: 20
     periodSeconds: 10
 

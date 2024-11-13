@@ -49,7 +49,6 @@ subprojects {
 
     bootBuildImage {
         createdDate = "now"
-        environment = System.getenv().findAll { key, value -> key.startsWith('DOCKER_') }
     }
 
     dependencyManagement {
