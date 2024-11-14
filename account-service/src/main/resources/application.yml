@@ -32,6 +32,10 @@ spring:
       host: localhost
       port: 6379
 
+service:
+  lock:
+    timeout: 10s
+
 management:
   endpoints:
     web:

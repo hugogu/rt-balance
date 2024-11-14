@@ -4,6 +4,7 @@ import io.github.hugogu.balance.account.repo.*
 import io.github.hugogu.balance.common.model.TransactionMessage
 import io.github.hugogu.balance.account.service.error.AccountNotFoundException
 import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.data.redis.core.RedisTemplate
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.scheduling.annotation.Async
@@ -11,8 +12,8 @@ import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Isolation
 import org.springframework.transaction.annotation.Transactional
 import java.math.BigDecimal
+import java.time.Duration
 import java.util.*
-import java.util.concurrent.TimeUnit
 import java.util.function.Consumer
 
 @Service
@@ -21,6 +22,9 @@ class AccountService(
     private val transactionLogRepo: TransactionLogRepo,
     private val redisTemplate: RedisTemplate<String, String>
 ) {
+    @Value("\${service.lock.timeout}")
+    lateinit var lockTimeout: Duration
+
     @Transactional
     fun createAccount(accountNumber: String, accountCcy: String, requestId: UUID): AccountEntity {
         val account = AccountEntity()
@@ -36,17 +40,9 @@ class AccountService(
     }
 
     fun processTransaction(transaction: TransactionMessage): Pair<AccountEntity, AccountEntity> {
-        val lockKey = "transaction-lock:${transaction.transactionId}"
-        val isLocked = redisTemplate.opsForValue().setIfAbsent(lockKey, "locked", 10, TimeUnit.SECONDS)
-        if (isLocked == true) {
-            try {
-                transactionLogRepo.save(TransactionLogEntity.from(transaction))
-                return accountRepo.handleTransaction(transaction)
-            } finally {
-                redisTemplate.delete(lockKey)
-            }
-        } else {
-            throw IllegalStateException("Transaction is already being processed")
+        return processWithLock(transaction.transactionId) {
+            transactionLogRepo.save(TransactionLogEntity.from(transaction))
+            accountRepo.handleTransaction(transaction)
         }
     }
 
@@ -57,16 +53,8 @@ class AccountService(
 
     @Async
     fun processTransactionAsync(transactionId: UUID, action: Consumer<UUID>) {
-        val lockKey = "transaction-lock:${transactionId}"
-        val isLocked = redisTemplate.opsForValue().setIfAbsent(lockKey, "locked", 10, TimeUnit.SECONDS)
-        if (isLocked == true) {
-            try {
-                action.accept(transactionId)
-            } finally {
-                redisTemplate.delete(lockKey)
-            }
-        } else {
-            throw IllegalStateException("Transaction is already being processed")
+        return processWithLock(transactionId) {
+            action.accept(transactionId)
         }
     }
 
@@ -95,6 +83,20 @@ class AccountService(
         val account = accountRepo.findById(accountId).orElseThrow { AccountNotFoundException(accountId) }
         account.balance += amount
         return accountRepo.save(account)
+    }
+
+    private fun <T> processWithLock(transactionId: UUID, action: () -> T): T {
+        val lockKey = "transaction-lock:${transactionId}"
+        val isLocked = redisTemplate.opsForValue().setIfAbsent(lockKey,"locked", lockTimeout)
+        if (isLocked == true) {
+            try {
+                return action()
+            } finally {
+                redisTemplate.delete(lockKey)
+            }
+        } else {
+            throw IllegalStateException("Transaction $transactionId is already being processed")
+        }
     }
 
     companion object {
