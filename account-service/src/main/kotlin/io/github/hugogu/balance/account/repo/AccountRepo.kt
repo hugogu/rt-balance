@@ -17,12 +17,14 @@ interface AccountRepo : JpaRepository<AccountEntity, UUID> {
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Retryable(include = [CannotAcquireLockException::class])
     @Transactional(isolation = Isolation.REPEATABLE_READ)
-    fun handleTransaction(transaction: TransactionMessage) {
+    fun handleTransaction(transaction: TransactionMessage): Pair<AccountEntity, AccountEntity> {
         val accounts = findAllById(listOf(transaction.fromAccount, transaction.toAccount))
         val from = accounts.find { it.id == transaction.fromAccount } ?: throw AccountNotFoundException(transaction.fromAccount)
         val to = accounts.find { it.id == transaction.toAccount } ?: throw AccountNotFoundException(transaction.toAccount)
 
         from.balance -= transaction.amount
         to.balance += transaction.amount
+
+        return from to to
     }
 }

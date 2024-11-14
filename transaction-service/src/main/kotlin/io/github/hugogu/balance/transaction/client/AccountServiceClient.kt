@@ -20,7 +20,7 @@ interface AccountServiceClient {
     fun queryAccountDetail(@PathVariable id: UUID): AccountDetail
 
     @PostMapping("/account:transfer")
-    fun processTransaction(transaction: TransactionMessage)
+    fun processTransaction(transaction: TransactionMessage): AccountDetail
 
     @PostMapping("/account:debit/{accountId}")
     fun debitAccount(
@@ -37,8 +37,8 @@ interface AccountServiceClient {
     ): AccountDetail
 
     @Retryable
-    fun processTransactionWithRetry(transaction: TransactionMessage) {
-        processTransaction(transaction)
+    fun processTransactionWithRetry(transaction: TransactionMessage): AccountDetail {
+        return processTransaction(transaction)
     }
 
     @Retryable

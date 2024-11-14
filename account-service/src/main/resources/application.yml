@@ -1,13 +1,28 @@
+server:
+  port: 8080
+  tomcat:
+    threads:
+      # The default value 200 is too high which would slow down the application.
+      # TPS will increase from 250 to 400 by changing the value to around 8 to 16 (based on CPU cores).
+      max: 8
+    connection-timeout: 5s
+    max-keep-alive-requests: 32
+
 spring:
   application:
     name: real-balance-account
-
   datasource:
     url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/account
     username: postgres
     password: postgres
   jpa:
     open-in-view: false
+  task:
+    scheduling:
+      pool:
+        size: 4
+      simple:
+        concurrency-limit: 8
   kafka:
     bootstrap-servers: localhost:29092
     producer:
