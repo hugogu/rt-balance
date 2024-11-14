@@ -1,0 +1,41 @@
+name: Test Helm Chart
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Helm
+        uses: azure/setup-helm@v3
+        with:
+          version: v3.7.1
+
+      - name: Lint Helm chart
+        run: helm lint ./helm-chart
+
+      - name: Install kind
+        uses: engineerd/setup-kind@v0.5.0
+
+      - name: Create kind cluster
+        run: kind create cluster --name kind --wait 600s
+
+      - name: Deploy Helm chart
+        run: helm install test ./helm-chart --wait
+
+      - name: Verify all pods are ready
+        run: kubectl wait --for=condition=ready pod --all --timeout=300s
+
+      - name: Show information
+        run: |
+          kubectl get pods
