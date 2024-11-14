@@ -27,6 +27,15 @@ spring:
     bootstrap-servers: localhost:29092
     producer:
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+    consumer:
+      group-id: ${spring.application.name}
+      auto-offset-reset: earliest
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        spring.json.trusted.packages: "io.github.hugogu"
+    admin:
+      # Topic automatic creation should finish in 10s.
+      operation-timeout: 10s
   data:
     redis:
       host: localhost
@@ -45,10 +54,17 @@ management:
     health:
       probes:
         enabled: true
+      show-components: always
+      show-details: always
 
 logging:
   level:
     org:
+      apache:
+        kafka:
+          clients:
+            # Avoid unnecessary noice from Kafka client.
+            NetworkClient: ERROR
       hibernate:
         engine:
           jdbc:

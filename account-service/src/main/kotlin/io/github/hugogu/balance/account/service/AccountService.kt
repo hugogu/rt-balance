@@ -1,5 +1,6 @@
 package io.github.hugogu.balance.account.service
 
+import io.github.hugogu.balance.account.config.KafkaConfig
 import io.github.hugogu.balance.account.repo.*
 import io.github.hugogu.balance.common.model.TransactionMessage
 import io.github.hugogu.balance.account.service.error.AccountNotFoundException
@@ -7,6 +8,8 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.data.redis.core.RedisTemplate
 import org.springframework.data.repository.findByIdOrNull
+import org.springframework.kafka.core.KafkaTemplate
+import org.springframework.retry.annotation.Retryable
 import org.springframework.scheduling.annotation.Async
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Isolation
@@ -20,7 +23,8 @@ import java.util.function.Consumer
 class AccountService(
     private val accountRepo: AccountRepo,
     private val transactionLogRepo: TransactionLogRepo,
-    private val redisTemplate: RedisTemplate<String, String>
+    private val redisTemplate: RedisTemplate<String, String>,
+    private val kafkaTemplate: KafkaTemplate<String, TransactionMessage>
 ) {
     @Value("\${service.lock.timeout}")
     lateinit var lockTimeout: Duration
@@ -37,6 +41,11 @@ class AccountService(
     @Transactional(readOnly = true, isolation = Isolation.READ_COMMITTED)
     fun queryAccountDetail(accountId: UUID): AccountEntity {
         return accountRepo.findById(accountId).orElseThrow { AccountNotFoundException(accountId) }
+    }
+
+    @Retryable
+    fun postTransaction(transaction: TransactionMessage) {
+        kafkaTemplate.send(KafkaConfig.PENDING_TRANSACTION_TOPIC, transaction.transactionId.toString(), transaction)
     }
 
     fun processTransaction(transaction: TransactionMessage): Pair<AccountEntity, AccountEntity> {

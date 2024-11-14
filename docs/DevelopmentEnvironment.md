@@ -56,6 +56,14 @@ In order to hold whole cluster in local, you'd better have 16GB of RAM and 4 CPU
   helm install metrics-server metrics-server/metrics-server --namespace kube-system
   ```
 
+### License Requirements
+
+#### [KPow](https://docs.factorhouse.io/kpow-ee/about/introduction/)
+
+It is used to manage Kafka cluster in local. [A license is required](https://factorhouse.io/kpow/community/#individual) to use it in docker-compose. 
+
+This requirement can be omitted if you don't need it.
+
 ## For Windows
 
 TBD

@@ -40,10 +40,14 @@ services:
       - "6379:6379"
     restart: unless-stopped
 
+  zookeeper:
+    image: zookeeper:3.5.8
+    ports:
+      - "2181:2181"
+
   kafka:
-    image: wurstmeister/kafka:2.12-2.4.1
-    expose:
-      - '29092'
+    image: wurstmeister/kafka:2.13-2.7.0
+    platform: linux/amd64
     ports:
       - "9092:9092"
       - "29092:29092"
@@ -56,13 +60,21 @@ services:
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: LOCAL:PLAINTEXT,PLAINTEXT:PLAINTEXT
       KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
-      KAFKA_CREATE_TOPICS: "Transaction:1:1"
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-    restart: unless-stopped
+    depends_on:
+      - zookeeper
 
 # The following components are used for monitoring the application in stress test and resiliency test.
 # In production, these components are not required as production may have its own monitoring tools.
+
+  kpow:
+    image: factorhouse/kpow-ce
+    restart: always
+    ports:
+      - "3001:3000"
+    depends_on:
+      - kafka
+    env_file:
+      - local.env
 
   prometheus:
     image: prom/prometheus

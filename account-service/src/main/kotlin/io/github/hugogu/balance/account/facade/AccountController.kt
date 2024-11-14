@@ -42,6 +42,15 @@ class AccountController(
     }
 
     /**
+     * This API is used to process the transaction message from the message queue.
+     * TODO: move it into a standalone service for better separation of concerns.
+     */
+    @PostMapping("/account:transfer/message")
+    fun postTransactionMessage(@RequestBody transaction: TransactionMessage) {
+        accountService.postTransaction(transaction)
+    }
+
+    /**
      * This API stores the transaction in the database and then processes it asynchronously.
      * people usually think that this is a good practice to improve the performance of the API.
      * But in practice, it would depend on the actual situation where how long the processing time is.
