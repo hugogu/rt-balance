@@ -17,6 +17,7 @@ spec:
           image: {{ .Values.accountService.image }}
           ports:
             - containerPort: 8080
+            - containerPort: 9010
           resources:
             requests:
               memory: "512Mi"
@@ -33,6 +34,15 @@ spec:
               value: {{ .Values.accountService.db.user }}
             - name: SPRING_DATASOURCE_PASSWORD
               value: {{ .Values.accountService.db.password }}
+            # Allow remote debugging & profiling from local.
+            - name: JAVA_OPTS
+              value: "-Dcom.sun.management.jmxremote \
+                      -Dcom.sun.management.jmxremote.authenticate=false \
+                      -Dcom.sun.management.jmxremote.ssl=false \
+                      -Dcom.sun.management.jmxremote.local.only=false \
+                      -Dcom.sun.management.jmxremote.port=9010 \
+                      -Dcom.sun.management.jmxremote.rmi.port=9010 \
+                      -Djava.rmi.server.hostname=127.0.0.1"
           livenessProbe: {{ toYaml .Values.probes.liveness | nindent 12 }}
           readinessProbe: {{ toYaml .Values.probes.readiness | nindent 12 }}
 ---
@@ -44,10 +54,14 @@ spec:
   selector:
     app: account-service
   ports:
-    - protocol: TCP
-      # TODO: Investigate why livenessProbe would fail if we use 80 here (and probe port 80)
+    - name: service-port
+      protocol: TCP
       port: 8080
       targetPort: 8080
+    - name: debug-port
+      protocol: TCP
+      port: 9010
+      targetPort: 9010
 
 {{- if .Values.accountService.hpa.enabled }}
 ---
