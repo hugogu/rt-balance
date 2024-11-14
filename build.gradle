@@ -78,6 +78,9 @@ subprojects {
         useJUnitPlatform {
             excludeTags 'integration'
         }
+        reports {
+            junitXml.required = true
+        }
         finalizedBy jacocoTestReport
     }
 

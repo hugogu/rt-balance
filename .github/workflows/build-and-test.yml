@@ -13,6 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     container: ubuntu
     permissions:
+      checks: write
       pull-requests: write
     services:
       postgres:
@@ -64,6 +65,13 @@ jobs:
 
       - name: Run tests
         run: ./gradlew test jacocoTestReport testAggregateTestReport
+      - name: Publish Test Results
+        uses: EnricoMi/publish-unit-test-result-action@v2
+        if: always()
+        with:
+          files: |
+            account-service/build/test-results/**/*.xml
+            transaction-service/build/test-results/**/*.xml
       - name: Add coverage to PR
         # https://github.com/marketplace/actions/jacoco-report
         id: jacoco
