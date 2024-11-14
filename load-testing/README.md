@@ -1,18 +1,45 @@
-# Stress Test Advanced Suite
+# Stress Test Suite
 
-## Pre-requisites
+## Pre-requisites & Setup
 
-* Install [Docker Desktop](https://www.docker.com/products/docker-desktop/)
-* Install [Docker Compose](https://docs.docker.com/compose/install/)
+Refers to [Environment Setup](../docs/DevelopmentEnvironment.md) for the required tools and setup.
 
-## Problem Statement
+## Basic Use Cases
+
+Basic stress test with k6 helps benchmark API performance with customized request pattern on heavy load.
+It can also be used to populate massive amount of customizable data to the system for testing.
+
+### Run Load Testing with K6
+
+Bring up a local instance of the `account-service` and run the load testing script.
+   ```shell
+   k6 run ./load-testing/scripts/mockdata-and-stress.js
+   ```
+
+You will see something like this:
+![benchmark](../docs/img/k6-benchmark.png)
+
+In the figure above, it shows a result of a stress test lasting 25 seconds and 60K request was processed during that time. 
+
+The TPS of account-service is around 2400 and the p(95) latency is 85ms (in my local environment).
+
+### Built-in Scripts
+
+There are some built-in scripts in the `./load-testing/scripts` directory. You can use them directly.
+
+* **mockdata-and-stress.js**: This script create account and make transaction between those account randomly with 200 vu (virtual user).
+* **create-account-stress.js**: This script only perform create accounts request with 200 concurrent vu.
+
+## Advanced Use Cases with Diagrams
+
+## Build a customized K6 with InfluxDB V2 Output Plugin
 
 The official release of K6 does not support InfluxDB V2 output plugin. 
 Need to build a customized k6 executable with InfluxDB output plugin.
 
 This component can be a shared library for all projects that need to run load testing with InfluxDB.
 
-## How to use
+### How to Build
 
 1. Build a customized k6 executable with InfluxDB output plugin. (:warning: This may require VPN to download images)
     ```shell
@@ -24,6 +51,9 @@ This component can be a shared library for all projects that need to run load te
    export PATH=$(go env GOPATH)/bin:$PATH
    xk6 build --with "github.com/grafana/xk6-output-influxdb" --output /tmp/k6
    ```
+
+### How to Run
+
 1. Bring up prometheus, influxdb and grafana services.
     ```shell
     docker-compose up -d
@@ -40,6 +70,9 @@ This component can be a shared library for all projects that need to run load te
    -e K6_INFLUXDB_ORGANIZATION='Hugo' \
    -e K6_INFLUXDB_BUCKET='k6' -e K6_INFLUXDB_TOKEN='secret_token' - < ./load-testing/scripts/create-account-stress.js
    ```
+
+### How to Monitor / Analyze
+
 1. Check test result and performance metrics.
    * Access [built-in dashboard](http://localhost:3000/d/dba00ead-0f0a-4c1d-a3f6-505d886ab946/k6-built-in-load-testing-results?orgId=1&refresh=5s)
       * Access Prometheus: http://localhost:9090
