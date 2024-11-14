@@ -2,6 +2,11 @@ ingress:
   enabled: true
   host: localhost
 
+redis:
+  enabled: true
+  image: redis:7
+  port: 6379
+
 accountService:
   image: account-service:0.0.1-SNAPSHOT
   replicas: 3
@@ -9,6 +14,8 @@ accountService:
     host: account-db
     user: postgres
     password: postgres
+  redis:
+    host: redis
   hpa:
     enabled: true
     minReplicas: 1

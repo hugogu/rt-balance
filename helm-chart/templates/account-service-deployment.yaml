@@ -27,6 +27,8 @@ spec:
           env:
             - name: DB_HOST
               value: {{ .Values.accountService.db.host }}
+            - name: SPRING_DATA_REDIS_HOST
+              value: {{ .Values.accountService.redis.host }}
             - name: SPRING_DATASOURCE_USERNAME
               value: {{ .Values.accountService.db.user }}
             - name: SPRING_DATASOURCE_PASSWORD
