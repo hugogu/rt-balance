@@ -4,30 +4,33 @@ import io.github.hugogu.balance.account.config.KafkaConfig
 import io.github.hugogu.balance.account.repo.*
 import io.github.hugogu.balance.common.model.TransactionMessage
 import io.github.hugogu.balance.account.service.error.AccountNotFoundException
+import jakarta.persistence.LockModeType
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
-import org.springframework.data.redis.core.RedisTemplate
+import org.springframework.dao.CannotAcquireLockException
+import org.springframework.data.jpa.repository.Lock
+import org.springframework.data.redis.core.RedisOperations
 import org.springframework.data.repository.findByIdOrNull
-import org.springframework.kafka.core.KafkaTemplate
+import org.springframework.kafka.core.KafkaOperations
 import org.springframework.retry.annotation.Retryable
-import org.springframework.scheduling.annotation.Async
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Isolation
 import org.springframework.transaction.annotation.Transactional
 import java.math.BigDecimal
 import java.time.Duration
 import java.util.*
-import java.util.function.Consumer
+
+typealias AccountPair = Pair<AccountEntity, AccountEntity>
 
 @Service
 class AccountService(
     private val accountRepo: AccountRepo,
     private val transactionLogRepo: TransactionLogRepo,
-    private val redisTemplate: RedisTemplate<String, String>,
-    private val kafkaTemplate: KafkaTemplate<String, TransactionMessage>
+    redisOperations: RedisOperations<String, String>,
+    private val kafkaOperations: KafkaOperations<String, TransactionMessage>,
+    @Value("\${service.lock.timeout}") private val lockTimeout: Duration
 ) {
-    @Value("\${service.lock.timeout}")
-    lateinit var lockTimeout: Duration
+    private val valueOperations = redisOperations.opsForValue()
 
     @Transactional
     fun createAccount(accountNumber: String, accountCcy: String, requestId: UUID): AccountEntity {
@@ -43,40 +46,64 @@ class AccountService(
         return accountRepo.findById(accountId).orElseThrow { AccountNotFoundException(accountId) }
     }
 
+    /**
+     * TODO: The potential issue of partitioning against transactionId is, transactions of the same account scatter.
+     *
+     * Database level locking is used to ensure the consistency of the account balance.
+     */
     @Retryable
-    fun postTransaction(transaction: TransactionMessage) {
-        kafkaTemplate.send(KafkaConfig.PENDING_TRANSACTION_TOPIC, transaction.transactionId.toString(), transaction)
+    fun postTransactionMessageToBroker(transaction: TransactionMessage) {
+        kafkaOperations.send(KafkaConfig.PENDING_TRANSACTION_TOPIC, transaction.transactionId.toString(), transaction)
+            .exceptionally {
+                log.error("Failed to send transaction message to broker", it)
+                null
+            }
     }
 
-    fun processTransaction(transaction: TransactionMessage): Pair<AccountEntity, AccountEntity> {
+    fun <T> persistAndProcessTransaction(transaction: TransactionMessage, processor: (TransactionMessage) -> T): T {
         return processWithLock(transaction.transactionId) {
-            transactionLogRepo.save(TransactionLogEntity.from(transaction))
-            accountRepo.handleTransaction(transaction)
+            // In synchronous mode, the transaction log is only recorded for reference, not for further processing.
+            // So the status upon insertion is just SUCCEED.
+            transactionLogRepo.save(TransactionLogEntity.from(transaction, status = ProcessingStatus.SUCCEED))
+            processor(transaction)
         }
+    }
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Retryable(include = [CannotAcquireLockException::class])
+    @Transactional(isolation = Isolation.REPEATABLE_READ)
+    fun processTransaction(transaction: TransactionMessage): AccountPair {
+        val accounts = accountRepo.findAllById(listOf(transaction.fromAccount, transaction.toAccount))
+        val from = accounts.find { it.id == transaction.fromAccount }
+            ?: throw AccountNotFoundException(transaction.fromAccount)
+        val to = accounts.find { it.id == transaction.toAccount }
+            ?: throw AccountNotFoundException(transaction.toAccount)
+
+        from.balance -= transaction.amount
+        to.balance += transaction.amount
+
+        return from to to
     }
 
     @Transactional
-    fun captureTransaction(transaction: TransactionMessage): TransactionLogEntity {
-        return transactionLogRepo.save(TransactionLogEntity.from(transaction))
+    fun persistPendingTransactionMessage(transaction: TransactionMessage): TransactionLogEntity {
+        return transactionLogRepo.save(TransactionLogEntity.from(transaction, status = ProcessingStatus.INIT))
     }
 
-    @Async
-    fun processTransactionAsync(transactionId: UUID, action: Consumer<UUID>) {
-        return processWithLock(transactionId) {
-            action.accept(transactionId)
-        }
-    }
-
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Retryable(include = [CannotAcquireLockException::class])
     @Transactional(isolation = Isolation.REPEATABLE_READ)
-    fun processLoggedTransaction(transactionId: UUID) {
-        val transaction = transactionLogRepo.findByIdOrNull(transactionId)
-            ?: throw IllegalStateException("Transaction $transactionId not found")
-        try {
-            accountRepo.handleTransaction(transaction.transactionData)
-            transaction.status = ProcessingStatus.SUCCEED
-        } catch (ex: Exception) {
-            log.error("Failed to process transaction $transactionId", ex)
-            transaction.status = ProcessingStatus.FAILED
+    fun loadAndProcessLoggedTransaction(transactionId: UUID) {
+        processWithLock(transactionId) {
+            val transaction = transactionLogRepo.findByIdOrNull(transactionId)
+                ?: throw IllegalStateException("Transaction $transactionId not found")
+            try {
+                processTransaction(transaction.transactionData)
+                transaction.status = ProcessingStatus.SUCCEED
+            } catch (ex: Exception) {
+                log.error("Failed to process transaction $transactionId", ex)
+                transaction.status = ProcessingStatus.FAILED
+            }
         }
     }
 
@@ -96,12 +123,12 @@ class AccountService(
 
     private fun <T> processWithLock(transactionId: UUID, action: () -> T): T {
         val lockKey = "transaction-lock:${transactionId}"
-        val isLocked = redisTemplate.opsForValue().setIfAbsent(lockKey,"locked", lockTimeout)
+        val isLocked = valueOperations.setIfAbsent(lockKey, "locked", lockTimeout)
         if (isLocked == true) {
             try {
                 return action()
             } finally {
-                redisTemplate.delete(lockKey)
+                valueOperations.getAndDelete(lockKey)
             }
         } else {
             throw IllegalStateException("Transaction $transactionId is already being processed")

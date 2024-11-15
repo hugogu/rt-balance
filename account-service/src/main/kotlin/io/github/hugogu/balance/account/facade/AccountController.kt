@@ -2,17 +2,22 @@ package io.github.hugogu.balance.account.facade
 
 import io.github.hugogu.balance.account.service.AccountService
 import io.github.hugogu.balance.common.model.TransactionMessage
+import org.springframework.beans.factory.annotation.Qualifier
+import org.springframework.boot.autoconfigure.task.TaskExecutionAutoConfiguration.APPLICATION_TASK_EXECUTOR_BEAN_NAME
+import org.springframework.core.task.AsyncTaskExecutor
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.transaction.annotation.Transactional
 import org.springframework.validation.annotation.Validated
 import org.springframework.web.bind.annotation.*
-import java.util.*
+import java.util.UUID
 
 @Validated
 @RestController("/account")
 class AccountController(
-    private val accountService: AccountService
+    private val accountService: AccountService,
+    @Qualifier(APPLICATION_TASK_EXECUTOR_BEAN_NAME)
+    private val asyncExecutor: AsyncTaskExecutor,
 ) {
     @PostMapping("/account")
     @Transactional
@@ -22,9 +27,10 @@ class AccountController(
          * Used as idempotent ID
          */
         @RequestHeader("X-Request-ID") requestId: UUID,
-    ): AccountIdentity {
+    ): ResponseEntity<AccountIdentity> {
         val entity = accountService.createAccount(request.accountNumber, request.currency.currencyCode, requestId)
-        return AccountIdentity(entity.id!!)
+
+        return ResponseEntity.status(HttpStatus.CREATED).body(AccountIdentity(entity.id!!))
     }
 
     @GetMapping("/account/{id}")
@@ -34,20 +40,29 @@ class AccountController(
         return AccountDetail.from(entity)
     }
 
+    /**
+     * Synchronously process transaction and return the updated account detail.
+     */
     @PostMapping("/account:transfer")
     fun processTransaction(@RequestBody transaction: TransactionMessage): AccountDetail {
-        val (fromAccount, _) = accountService.processTransaction(transaction)
+        val (fromAccount, _) = accountService.persistAndProcessTransaction(transaction) {
+            accountService.processTransaction(transaction)
+        }
 
         return AccountDetail.from(fromAccount)
     }
 
     /**
      * This API is used to process the transaction message from the message queue.
+     * The response status is 202 (ACCEPTED) to indicate that the message is accepted and will be processed asynchronously.
+     *
      * TODO: move it into a standalone service for better separation of concerns.
      */
     @PostMapping("/account:transfer/message")
-    fun postTransactionMessage(@RequestBody transaction: TransactionMessage) {
-        accountService.postTransaction(transaction)
+    fun postTransactionMessage(@RequestBody transaction: TransactionMessage): ResponseEntity<Void> {
+        accountService.postTransactionMessageToBroker(transaction)
+
+        return ResponseEntity.status(HttpStatus.ACCEPTED).build()
     }
 
     /**
@@ -64,9 +79,9 @@ class AccountController(
     @Deprecated("This API is only implemented for demonstration & performance comparison purposes.")
     @PostMapping("/account:transfer/async")
     fun processTransactionAsync(@RequestBody transaction: TransactionMessage): ResponseEntity<Void> {
-        val entity = accountService.captureTransaction(transaction)
-        accountService.processTransactionAsync(entity.id!!) { transactionId ->
-            accountService.processLoggedTransaction(transactionId)
+        val entity = accountService.persistPendingTransactionMessage(transaction)
+        asyncExecutor.submit {
+            accountService.loadAndProcessLoggedTransaction(entity.id!!)
         }
 
         return ResponseEntity.status(HttpStatus.ACCEPTED).build()

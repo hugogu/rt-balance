@@ -9,7 +9,7 @@ redis:
 
 accountService:
   image: account-service:0.0.1-SNAPSHOT
-  replicas: 3
+  replicas: 2
   db:
     host: account-db
     user: postgres
@@ -19,12 +19,12 @@ accountService:
   hpa:
     enabled: true
     minReplicas: 1
-    maxReplicas: 5
+    maxReplicas: 3
     targetCPUUtilizationPercentage: 70
 
 transactionService:
   image: transaction-service:0.0.1-SNAPSHOT
-  replicas: 3
+  replicas: 2
   db:
     host: transaction-db
     user: postgres
@@ -32,7 +32,7 @@ transactionService:
   hpa:
     enabled: true
     minReplicas: 1
-    maxReplicas: 5
+    maxReplicas: 3
     targetCPUUtilizationPercentage: 70
 
 postgres:

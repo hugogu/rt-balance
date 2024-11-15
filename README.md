@@ -6,8 +6,12 @@ You may need to refer to the [Development Environment](./docs/DevelopmentEnviron
 
 Having docker & minikube running is a prerequisite for building the docker image.
 
-* Build the docker image. 
+* Build the docker image. :note: Minikube itself used a separate docker context, so the image needs to be built twice.
     ```bash
+    # For docker-compose
+    ./gradlew :account-service:bootBuildImage
+    ./gradlew :transaction-service:bootBuildImage
+    # For minikube
     eval $(minikube docker-env)
     ./gradlew :account-service:bootBuildImage
     ./gradlew :transaction-service:bootBuildImage
@@ -22,6 +26,11 @@ Having docker & minikube running is a prerequisite for building the docker image
     Or this to update
     ```bash
     helm upgrade test ./helm-chart/ --recreate-pods -n default 
+    ```
+* Check status
+    ```bash
+    helm list -n default
+    kubectl get all -n default
     ```
 
 * Tear down

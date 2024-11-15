@@ -62,7 +62,7 @@ This component can be a shared library for all projects that need to run load te
    ```shell
     /tmp/k6 run -o xk6-influxdb  \
     -e K6_INFLUXDB_ORGANIZATION='Hugo' \
-    -e K6_INFLUXDB_BUCKET='k6' -e K6_INFLUXDB_TOKEN='secret_token' - < ./load-testing/scripts/transaction-stress.js
+    -e K6_INFLUXDB_BUCKET='k6' -e K6_INFLUXDB_TOKEN='secret_token' - < ./load-testing/scripts/mockdata-and-stress.js
    ```
    OR run from docker (:warning: need to update the address in script to make it accessible from local)
    ```shell

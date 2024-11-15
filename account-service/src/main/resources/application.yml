@@ -27,15 +27,30 @@ spring:
     bootstrap-servers: localhost:29092
     producer:
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      properties:
+        transaction.timeout.ms: "5000"
+        request.timeout.ms: "3000"
+        delivery.timeout.ms: "10000"
+        max.block.ms: "15000"
     consumer:
       group-id: ${spring.application.name}
       auto-offset-reset: earliest
       value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
       properties:
-        spring.json.trusted.packages: "io.github.hugogu"
+        spring.json.trusted.packages: "io.github.hugogu.*"
+      max-poll-records: 20
+      # According to the nature of transaction message received from API.
+      # There are lock and idempotent check in the service layer.
+      # So, we don't need the transactional feature of Kafka itself.
+      # Although the default is `read_uncommitted` already,
+      # set it deliberately to avoid misunderstanding.
+      isolation-level: read_uncommitted
     admin:
       # Topic automatic creation should finish in 10s.
       operation-timeout: 10s
+    listener:
+      type: single
+
   data:
     redis:
       host: localhost
@@ -64,11 +79,11 @@ logging:
         kafka:
           clients:
             # Avoid unnecessary noice from Kafka client.
-            NetworkClient: ERROR
+            NetworkClient: WARN
       hibernate:
         engine:
           jdbc:
-            spi: ERROR
+            spi: WARN
       springframework:
         retry:
           support: INFO

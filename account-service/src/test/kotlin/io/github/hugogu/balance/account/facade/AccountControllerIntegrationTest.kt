@@ -42,7 +42,7 @@ class AccountControllerIntegrationTest {
                     }
                 """.trimIndent())
         )
-            .andExpect(status().isOk)
+            .andExpect(status().isCreated)
             .andExpect(jsonPath("$.id").value(requestId.toString()))
 
         mockMvc.perform(get("/account/$requestId").contentType(MediaType.APPLICATION_JSON))

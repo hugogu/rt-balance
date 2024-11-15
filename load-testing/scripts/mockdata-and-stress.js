@@ -27,15 +27,15 @@ export default function () {
             'X-Request-ID': uuidv4().toString()
         },
     });
-    const success = check(res, {
-        'account created': (r) => r.status === 200,
+    check(res, {
+        'account created': (r) => r.status === 201 || r.status === 200,
         'bad request': (r) => r.status === 400,
         'api not found': (r) => r.status === 404,
         'overloaded': (r) => r.status === 429,
         'server error': (r) => r.status === 500,
         'service unavailable': (r) => r.status === 503
     });
-    if (res.status !== 200) {
+    if (res.status !== 201 && res.status !== 200) {
         return;
     }
 
@@ -60,14 +60,14 @@ export default function () {
         };
 
         // Create transaction
-        res = http.post('http://localhost:8080/account:transfer/async', JSON.stringify(transaction), {
+        res = http.post('http://localhost:8080/account:transfer', JSON.stringify(transaction), {
             headers: {
                 'Content-Type': 'application/json',
                 'X-Request-ID': uuidv4().toString()
             },
         });
         check(res, {
-            'transaction created': (r) => r.status === 200,
+            'transaction created': (r) => r.status === 200 || r.status === 201 || r.status === 202,
             'transaction bad request': (r) => r.status === 400,
             'transaction api not found': (r) => r.status === 404,
             'transaction overloaded': (r) => r.status === 429,

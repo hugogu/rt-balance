@@ -27,11 +27,11 @@ class TransactionLogEntity : EntityBase() {
     var version: Int = 0
 
     companion object {
-        fun from(transaction: TransactionMessage): TransactionLogEntity {
+        fun from(transaction: TransactionMessage, status: ProcessingStatus = ProcessingStatus.INIT): TransactionLogEntity {
             return TransactionLogEntity().apply {
                 this.setId(transaction.transactionId)
                 this.transactionData = transaction
-                this.status = ProcessingStatus.INIT
+                this.status = status
             }
         }
     }
