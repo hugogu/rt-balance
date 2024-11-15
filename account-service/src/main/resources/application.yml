@@ -15,6 +15,10 @@ spring:
     url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/account
     username: postgres
     password: postgres
+  cache:
+    type: redis
+    redis:
+      enable-statistics: true
   jpa:
     open-in-view: false
   task:
@@ -50,7 +54,6 @@ spring:
       operation-timeout: 10s
     listener:
       type: single
-
   data:
     redis:
       host: localhost

@@ -1,5 +1,6 @@
 package io.github.hugogu.balance.account.service
 
+import io.github.hugogu.balance.account.config.RedisConfig.Companion.ACCOUNT_DETAIL_CACHE
 import io.github.hugogu.balance.account.config.KafkaConfig
 import io.github.hugogu.balance.account.repo.*
 import io.github.hugogu.balance.common.model.TransactionMessage
@@ -8,6 +9,9 @@ import jakarta.persistence.LockModeType
 import jakarta.validation.Valid
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.cache.annotation.CacheEvict
+import org.springframework.cache.annotation.Cacheable
+import org.springframework.cache.annotation.Caching
 import org.springframework.dao.CannotAcquireLockException
 import org.springframework.data.jpa.repository.Lock
 import org.springframework.data.redis.core.RedisOperations
@@ -45,6 +49,7 @@ class AccountService(
         return accountRepo.save(account)
     }
 
+    @Cacheable(ACCOUNT_DETAIL_CACHE)
     @Transactional(readOnly = true, isolation = Isolation.READ_COMMITTED)
     fun queryAccountDetail(accountId: UUID): AccountEntity {
         return accountRepo.findById(accountId).orElseThrow {
@@ -75,6 +80,12 @@ class AccountService(
         }
     }
 
+    @Caching(
+        evict = [
+            CacheEvict(ACCOUNT_DETAIL_CACHE, key = "{#transaction.fromAccount}"),
+            CacheEvict(ACCOUNT_DETAIL_CACHE, key = "{#transaction.toAccount}")
+        ]
+    )
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Retryable(include = [CannotAcquireLockException::class])
     @Transactional(isolation = Isolation.REPEATABLE_READ)
@@ -96,11 +107,17 @@ class AccountService(
         return transactionLogRepo.save(TransactionLogEntity.from(transaction, status = ProcessingStatus.INIT))
     }
 
+    @Caching(
+        evict = [
+            CacheEvict(ACCOUNT_DETAIL_CACHE, key = "{#result.fromAccount}"),
+            CacheEvict(ACCOUNT_DETAIL_CACHE, key = "{#result.toAccount}")
+        ]
+    )
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Retryable(include = [CannotAcquireLockException::class])
     @Transactional(isolation = Isolation.REPEATABLE_READ)
-    fun loadAndProcessLoggedTransaction(transactionId: UUID) {
-        processWithLock(transactionId) {
+    fun loadAndProcessLoggedTransaction(transactionId: UUID): TransactionMessage {
+        return processWithLock(transactionId) {
             val transaction = transactionLogRepo.findByIdOrNull(transactionId)
                 ?: throw EntityNotFoundException("Transaction $transactionId not found")
             try {
@@ -110,6 +127,7 @@ class AccountService(
                 log.error("Failed to process transaction $transactionId", ex)
                 transaction.status = ProcessingStatus.FAILED
             }
+            transaction.transactionData
         }
     }
 
