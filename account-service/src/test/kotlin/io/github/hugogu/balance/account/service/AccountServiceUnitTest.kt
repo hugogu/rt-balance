@@ -1,8 +1,9 @@
 package io.github.hugogu.balance.account.service
 
 import io.github.hugogu.balance.account.repo.*
-import io.github.hugogu.balance.account.service.error.AccountNotFoundException
+import io.github.hugogu.balance.common.error.AccountNotFoundException
 import io.github.hugogu.balance.common.model.TransactionMessage
+import jakarta.persistence.EntityNotFoundException
 import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.Matchers.containsString
 import org.junit.jupiter.api.BeforeEach
@@ -84,7 +85,7 @@ class AccountServiceUnitTest {
 
         try {
             accountService.queryAccountDetail(accountId)
-        } catch (e: AccountNotFoundException) {
+        } catch (e: EntityNotFoundException) {
             assertThat(e.message, containsString(accountId.toString()))
         }
     }

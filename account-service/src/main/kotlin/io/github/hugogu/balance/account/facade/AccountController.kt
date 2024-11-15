@@ -2,6 +2,7 @@ package io.github.hugogu.balance.account.facade
 
 import io.github.hugogu.balance.account.service.AccountService
 import io.github.hugogu.balance.common.model.TransactionMessage
+import jakarta.validation.Valid
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.boot.autoconfigure.task.TaskExecutionAutoConfiguration.APPLICATION_TASK_EXECUTOR_BEAN_NAME
 import org.springframework.core.task.AsyncTaskExecutor
@@ -22,7 +23,7 @@ class AccountController(
     @PostMapping("/account")
     @Transactional
     fun createAccount(
-        @RequestBody request: AccountCreationRequest,
+        @Valid @RequestBody request: AccountCreationRequest,
         /**
          * Used as idempotent ID
          */
@@ -44,7 +45,7 @@ class AccountController(
      * Synchronously process transaction and return the updated account detail.
      */
     @PostMapping("/account:transfer")
-    fun processTransaction(@RequestBody transaction: TransactionMessage): AccountDetail {
+    fun processTransaction(@Valid @RequestBody transaction: TransactionMessage): AccountDetail {
         val (fromAccount, _) = accountService.persistAndProcessTransaction(transaction) {
             accountService.processTransaction(transaction)
         }
@@ -59,7 +60,7 @@ class AccountController(
      * TODO: move it into a standalone service for better separation of concerns.
      */
     @PostMapping("/account:transfer/message")
-    fun postTransactionMessage(@RequestBody transaction: TransactionMessage): ResponseEntity<Void> {
+    fun postTransactionMessage(@Valid @RequestBody transaction: TransactionMessage): ResponseEntity<Void> {
         accountService.postTransactionMessageToBroker(transaction)
 
         return ResponseEntity.status(HttpStatus.ACCEPTED).build()
@@ -78,7 +79,7 @@ class AccountController(
      */
     @Deprecated("This API is only implemented for demonstration & performance comparison purposes.")
     @PostMapping("/account:transfer/async")
-    fun processTransactionAsync(@RequestBody transaction: TransactionMessage): ResponseEntity<Void> {
+    fun processTransactionAsync(@Valid @RequestBody transaction: TransactionMessage): ResponseEntity<Void> {
         val entity = accountService.persistPendingTransactionMessage(transaction)
         asyncExecutor.submit {
             accountService.loadAndProcessLoggedTransaction(entity.id!!)
@@ -93,7 +94,7 @@ class AccountController(
     @PostMapping("/account:debit/{id}")
     fun debitAccount(
         @PathVariable id: UUID,
-        @RequestBody request: AccountDebitRequest,
+        @Valid @RequestBody request: AccountDebitRequest,
         /**
          * Used as idempotent ID
          */
@@ -107,7 +108,7 @@ class AccountController(
     @PostMapping("/account:credit/{id}")
     fun creditAccount(
         @PathVariable id: UUID,
-        @RequestBody request: AccountCreditRequest,
+        @Valid @RequestBody request: AccountCreditRequest,
         /**
          * Used as idempotent ID
          */

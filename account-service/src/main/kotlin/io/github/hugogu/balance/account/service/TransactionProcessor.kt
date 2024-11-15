@@ -10,7 +10,9 @@ import org.springframework.kafka.annotation.KafkaListener
 import org.springframework.kafka.annotation.RetryableTopic
 import org.springframework.retry.annotation.Backoff
 import org.springframework.stereotype.Service
+import org.springframework.validation.annotation.Validated
 
+@Validated
 @Service
 class TransactionProcessor(
     val accountService: AccountService,
