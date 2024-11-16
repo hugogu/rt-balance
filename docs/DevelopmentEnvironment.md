@@ -27,7 +27,8 @@ In order to hold whole cluster in local, you'd better have 16GB of RAM and 4 CPU
   ```
   Then you can start minikube and switch k8s context to minikube
   ```shell
-  minikube start
+  # Ensure you have enough resources for minikube
+  minikube start --cpus=4 --memory=8192
   kubectl config use-context minikube
   ```
 * Install [Grafana K6](https://grafana.com/docs/k6/latest/set-up/install-k6/) for load testing

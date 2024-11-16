@@ -21,10 +21,10 @@ spec:
           resources:
             requests:
               memory: "512Mi"
-              cpu: "128m"
-            limits:
-              memory: "1024Mi"
               cpu: "512m"
+            limits:
+              memory: "1380Mi"
+              cpu: "1024m"
           env:
             - name: DB_HOST
               value: {{ .Values.accountService.db.host }}
@@ -34,6 +34,8 @@ spec:
               value: {{ .Values.accountService.db.user }}
             - name: SPRING_DATASOURCE_PASSWORD
               value: {{ .Values.accountService.db.password }}
+            - name: SPRING_KAFKA_BOOTSTRAP_SERVERS
+              value: {{ .Values.accountService.kafka.bootstrapServers }}
             # Allow remote debugging & profiling from local.
             - name: JAVA_OPTS
               value: "-Dcom.sun.management.jmxremote \

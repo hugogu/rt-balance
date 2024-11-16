@@ -21,6 +21,10 @@ helm list -n default
 kubectl get all -n default
 # This will open a kubernetes dashboard in browser.
 minikube dashboard
+# If you use Kubernetes of Docker Desktop, you may need to install K8S Dashboard.
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/dashboard/v2.7.0/aio/deploy/recommended.yaml
+kubectl proxy
+open http://localhost:8001/api/v1/namespaces/kubernetes-dashboard/services/https:kubernetes-dashboard:/proxy/
 ```
 Once deployed successfully, your dashboard should show something like this:
 ![K8s Dashboard](../docs/img/dashboard.png)

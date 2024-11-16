@@ -16,6 +16,8 @@ accountService:
     password: postgres
   redis:
     host: redis
+  kafka:
+    bootstrapServers: kafka:9092
   hpa:
     enabled: true
     minReplicas: 1
@@ -48,6 +50,16 @@ postgres:
     user: postgres
     password: postgres
 
+kafka:
+  enabled: true
+  image: wurstmeister/kafka:2.13-2.7.0
+  replicas: 1
+
+zookeeper:
+  enabled: true
+  image: zookeeper:3.5.8
+  replicas: 1
+
 # The liveness and readiness probes are used to only accept request when the service is fully started.
 # Depending on the resource allocation, it may take 3 to 75 seconds to start the service.
 probes:
@@ -56,7 +68,7 @@ probes:
       path: /actuator/health/liveness
       port: 8080
     failureThreshold: 3
-    initialDelaySeconds: 110
+    initialDelaySeconds: 40
     periodSeconds: 20
     timeoutSeconds: 20
   readiness:
@@ -66,7 +78,7 @@ probes:
     # When all instances become unready, the service will be unavailable and return 503.
     # So it should be cautious to set the failureThreshold.
     failureThreshold: 5
-    initialDelaySeconds: 120
+    initialDelaySeconds: 45
     periodSeconds: 5
     timeoutSeconds: 20
 
