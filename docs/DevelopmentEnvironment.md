@@ -23,8 +23,6 @@ In order to hold whole cluster in local, you'd better have 16GB of RAM and 4 CPU
   ```shell
   minikube start
   kubectl config use-context minikube
-  # This will open a kubernetes dashboard in browser.
-  minikube dashboard
   ```
 * Install [Grafana K6](https://grafana.com/docs/k6/latest/set-up/install-k6/) for load testing
   ```shell

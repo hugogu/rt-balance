@@ -77,7 +77,8 @@ subprojects {
 
     test {
         useJUnitPlatform {
-            excludeTags 'integration'
+            // Exclude integration test that requires a local account-service to be running.
+            excludeTags 'require-account'
         }
         reports {
             junitXml.required = true

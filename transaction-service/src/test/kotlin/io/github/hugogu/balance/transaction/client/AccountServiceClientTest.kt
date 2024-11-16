@@ -18,6 +18,7 @@ import kotlin.test.assertNotNull
 @ComponentScan("io.github.hugogu.balance.common")
 @ActiveProfiles("test")
 @Tag("integration")
+@Tag("require-account")
 class AccountServiceClientIntegrationTest {
 
     @Autowired

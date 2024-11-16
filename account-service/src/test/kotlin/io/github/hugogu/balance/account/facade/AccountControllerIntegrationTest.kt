@@ -2,6 +2,7 @@ package io.github.hugogu.balance.account.facade
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import io.github.hugogu.balance.common.model.TransactionMessage
+import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.junit.jupiter.params.ParameterizedTest
@@ -19,6 +20,7 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 import java.math.BigDecimal
 import java.util.*
 
+@Tag("integration")
 @ExtendWith(SpringExtension::class)
 @SpringBootTest
 @AutoConfigureMockMvc
