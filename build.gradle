@@ -1,10 +1,11 @@
 plugins {
-    id 'org.jetbrains.kotlin.jvm' version '1.9.25'
-    id 'org.jetbrains.kotlin.plugin.spring' version '1.9.25'
+    id 'org.jetbrains.kotlin.jvm' version '2.0.10'
+    id 'org.jetbrains.kotlin.plugin.spring' version '2.0.10'
     id 'org.springframework.boot' version '3.2.11' apply(false)
     id 'io.spring.dependency-management' version '1.1.6'
-    id 'org.jetbrains.kotlin.plugin.jpa' version '1.9.25'
+    id 'org.jetbrains.kotlin.plugin.jpa' version '2.0.10'
     id 'jacoco'
+    id "io.gitlab.arturbosch.detekt" version "1.23.7"
 }
 
 group = 'io.github.hugogu'
@@ -14,11 +15,16 @@ repositories {
     mavenCentral()
 }
 
+configurations {
+    detekt
+}
+
 subprojects {
     apply plugin: 'io.spring.dependency-management'
     apply plugin: 'org.jetbrains.kotlin.jvm'
     apply plugin: 'org.jetbrains.kotlin.plugin.spring'
     apply plugin: 'jacoco'
+    apply plugin: "io.gitlab.arturbosch.detekt"
 
     group = 'io.github.hugogu'
     version = '0.0.1-SNAPSHOT'
@@ -34,6 +40,10 @@ subprojects {
             freeCompilerArgs.addAll '-Xjsr305=strict'
             freeCompilerArgs.addAll '-Xjvm-default=all'
         }
+    }
+
+    detekt {
+        config.setFrom("${rootDir}/detekt.yml")
     }
 
     allOpen {
@@ -73,6 +83,7 @@ subprojects {
         testImplementation 'org.springframework.kafka:spring-kafka-test'
         testImplementation "org.mockito.kotlin:mockito-kotlin:5.4.0"
         testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+        detekt 'io.gitlab.arturbosch.detekt:detekt-cli:1.23.7'
     }
 
     test {
@@ -97,6 +108,31 @@ subprojects {
             xml.required = true
             csv.required = true
             html.outputLocation = layout.buildDirectory.dir('jacocoHtml')
+        }
+    }
+}
+
+tasks.named("detekt").configure {
+    reports {
+        // Enable/Disable XML report (default: true)
+        xml.required.set(true)
+        xml.outputLocation.set(file("build/reports/detekt.xml"))
+        // Enable/Disable HTML report (default: true)
+        html.required.set(true)
+        html.outputLocation.set(file("build/reports/detekt.html"))
+        // Enable/Disable TXT report (default: true)
+        txt.required.set(true)
+        txt.outputLocation.set(file("build/reports/detekt.txt"))
+        // Enable/Disable SARIF report (default: false)
+        sarif.required.set(true)
+        sarif.outputLocation.set(file("build/reports/detekt.sarif"))
+        // Enable/Disable MD report (default: false)
+        md.required.set(true)
+        md.outputLocation.set(file("build/reports/detekt.md"))
+        custom {
+            // The simple class name of your custom report.
+            reportId = "CustomJsonReport"
+            outputLocation.set(file("build/reports/detekt.json"))
         }
     }
 }
