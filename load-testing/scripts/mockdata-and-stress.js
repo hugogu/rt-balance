@@ -33,15 +33,20 @@ export default function () {
         'api not found': (r) => r.status === 404,
         'overloaded': (r) => r.status === 429,
         'server error': (r) => r.status === 500,
-        'service unavailable': (r) => r.status === 503
+        'service gateway error': (r) => r.status === 502,
+        'service unavailable': (r) => r.status === 503,
+        'service timeout': (r) => r.status === 504,
     });
+    if (res.status < 200 || res.status >= 400) {
+        console.error(`Account creation failed: ${res.status}`);
+    }
     if (res.status !== 201 && res.status !== 200) {
         return;
     }
 
     accountIds.push(res.json().id);
 
-    if (accountIds.length >= 10) {
+    if (accountIds.length >= 3) {
         // Randomly select two accounts
         // TODO: simulate hot accounts.
         let fromAccount = randomItem(accountIds);
@@ -72,7 +77,12 @@ export default function () {
             'transaction api not found': (r) => r.status === 404,
             'transaction overloaded': (r) => r.status === 429,
             'transaction server error': (r) => r.status === 500,
-            'transaction service unavailable': (r) => r.status === 503
+            'transaction gateway error': (r) => r.status === 502,
+            'transaction service unavailable': (r) => r.status === 503,
+            'transaction timeout': (r) => r.status === 504,
         });
+        if (res.status < 200 || res.status >= 400) {
+            console.error(`Transaction creation failed: ${res.status}`);
+        }
     }
 }

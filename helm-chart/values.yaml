@@ -34,6 +34,8 @@ transactionService:
     minReplicas: 1
     maxReplicas: 3
     targetCPUUtilizationPercentage: 70
+  accountService:
+    url: http://account-service
 
 postgres:
   image: postgres:17-alpine
@@ -46,21 +48,25 @@ postgres:
     user: postgres
     password: postgres
 
+# The liveness and readiness probes are used to only accept request when the service is fully started.
+# Depending on the resource allocation, it may take 3 to 75 seconds to start the service.
 probes:
   liveness:
     httpGet:
       path: /actuator/health/liveness
       port: 8080
     failureThreshold: 3
-    initialDelaySeconds: 60
+    initialDelaySeconds: 110
     periodSeconds: 20
-    timeoutSeconds: 10
+    timeoutSeconds: 20
   readiness:
     httpGet:
       path: /actuator/health/readiness
       port: 8080
-    failureThreshold: 1
-    initialDelaySeconds: 60
+    # When all instances become unready, the service will be unavailable and return 503.
+    # So it should be cautious to set the failureThreshold.
+    failureThreshold: 5
+    initialDelaySeconds: 120
     periodSeconds: 5
-    timeoutSeconds: 5
+    timeoutSeconds: 20
 

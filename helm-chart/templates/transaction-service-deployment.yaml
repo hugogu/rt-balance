@@ -33,6 +33,8 @@ spec:
               value: {{ .Values.transactionService.db.user }}
             - name: SPRING_DATASOURCE_PASSWORD
               value: {{ .Values.transactionService.db.password }}
+            - name: ACCOUNT_SERVICE_URL
+              value: {{ .Values.transactionService.accountService.url }}
           livenessProbe: {{ toYaml .Values.probes.liveness | nindent 12 }}
           readinessProbe: {{ toYaml .Values.probes.readiness | nindent 12 }}
 ---
