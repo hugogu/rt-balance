@@ -1,5 +1,11 @@
 # Development Environment
 
+## Local Development Environment
+
+The overall local environment is built on top of Docker and Docker Compose composed of several services.
+
+![img.png](img/LocalEnvironment.png)
+
 ## For Mac
 
 ### System Requirements
