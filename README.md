@@ -16,54 +16,49 @@ Having docker & minikube running is a prerequisite for building the docker image
     ./gradlew :account-service:bootBuildImage
     ./gradlew :transaction-service:bootBuildImage
     ```
+:warning: For Mac users, the image built is for amd64 architecture. 
 
 ## Deploy
 
-* Deploy via helm
-    ```bash
-    helm install test ./helm-chart/ --namespace default
-    ```
-    Or this to update
-    ```bash
-    helm upgrade test ./helm-chart/ --recreate-pods -n default 
-    ```
-* Check status
-    ```bash
-    helm list -n default
-    kubectl get all -n default
-    ```
+### Helm Chart Deployment
 
-* Tear down
-    ```bash
-    helm uninstall test -n default
-    ```
-  
+Refer to the [Helm Chart Readme](./helm-chart/README.md) for more details.
+
+### Docker-Compose Deployment
+
+Having images get built successfully. 
+
+```bash
+docker-compose up -d account-service-api transaction-service-api
+```
+
 ## Test
 
-### Expose the service in Helm
+### Unit Test & Integration Test
 
-* Expose the service to local for testing purpose.
-    ```bash
-    kubectl port-forward svc/account-db 5433:5432
-    kubectl port-forward svc/transaction-db 5434:5432
-    kubectl port-forward svc/account-service 8080:8080
-    kubectl port-forward svc/transaction-service 8081:8080
-    kubectl port-forward svc/ingress-nginx-controller 8080:80
-    ```
-     OR using minikube if the k8s cluster was in local.
-    ```bash
-    minikube service account-service --url
-    ```
+* To run all unit test
+```bash
+./gradlew test jacocoTestReport testAggregateTestReport -DexcludeTags=integration
+```
+* To run all integration test
+```bash
+# Bring up local environment
+docker-compose up -d postgres redis kafka
+./gradlew test jacocoTestReport testAggregateTestReport -DincludeTags=integration
+# Open test report
+open test-results/build/reports/tests/unit-test/aggregated-results/index.html
+```
+* To run dependent integration test (some tests in transaction-service requires account-service to be running)
+```bash
+./gradlew :account-service:bootRun
+./gradlew :transaction-service:test jacocoTestReport testAggregateTestReport -DincludeTags=require-account,integration
+```
 
 ### Stress Test
 Please refer to the [load-testing](./load-testing/README.md) for more details.
 
 ## Other commands
 
-* Check what is deployed
-    ```bash
-    kubectl get all -n rt-balance
-    ```
 * Check Docker context
     ```bash
     docker context ls
@@ -73,11 +68,6 @@ Please refer to the [load-testing](./load-testing/README.md) for more details.
     docker context use default
     eval $(minikube docker-env)
     ```
-
-### Access the application from Host
-  ```shell
-  minikube -n rt-balance service account-db --url
-  ```
 
 ## Key References
 

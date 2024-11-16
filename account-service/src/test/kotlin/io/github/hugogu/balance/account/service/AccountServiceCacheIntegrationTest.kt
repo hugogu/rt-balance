@@ -2,6 +2,7 @@ package io.github.hugogu.balance.account.service
 
 import io.github.hugogu.balance.account.repo.AccountRepo
 import io.github.hugogu.balance.common.model.TransactionMessage
+import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.kotlin.never
@@ -16,6 +17,7 @@ import org.springframework.test.context.junit.jupiter.SpringExtension
 import java.math.BigDecimal
 import java.util.*
 
+@Tag("integration")
 @ExtendWith(SpringExtension::class)
 @SpringBootTest
 @AutoConfigureMockMvc
