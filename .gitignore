@@ -1,7 +1,16 @@
 HELP.md
 *.log
 .gradle
-build/
+**/build/classes
+**/build/kotlin
+**/build/jacoco
+**/build/tmp
+**/build/libs
+**/build/resources
+account-service/build/reports
+account-service/build/test-results
+transaction-service/build/reports
+transaction-service/build/test-results
 tmp/
 !gradle/wrapper/gradle-wrapper.jar
 !**/src/main/**/build/
