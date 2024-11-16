@@ -47,6 +47,7 @@ After deployment, you may want to expose them to the host machine for testing pu
     kubectl port-forward svc/account-db 5433:5432
     kubectl port-forward svc/transaction-db 5434:5432
     kubectl port-forward svc/account-service 8082:8080
+    kubectl port-forward svc/account-service 9010:9010
     kubectl port-forward svc/transaction-service 8081:8080
     kubectl port-forward svc/ingress-nginx-controller 8080:80
     ```

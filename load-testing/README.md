@@ -12,6 +12,7 @@ It can also be used to populate massive amount of customizable data to the syste
 ### Run Load Testing with K6
 
 Bring up a local instance of the `account-service` and run the load testing script.
+
    ```shell
    k6 run ./load-testing/scripts/mockdata-and-stress.js
    ```
@@ -22,6 +23,16 @@ You will see something like this:
 In the figure above, it shows a result of a stress test lasting 25 seconds and 60K request was processed during that time. 
 
 The TPS of account-service is around 2400 and the p(95) latency is 85ms (in my local environment).
+
+### Run Resilience Testing with K6
+
+Take down the whole service while running a stress test to see how the system behaves.
+
+   ```shell
+   k6 run -e TARGET_HOST=http://localhost:8080 -e ENABLE_CHAOS_MONKEY=true ./load-testing/scripts/mockdata-and-stress.js
+   ```
+
+:warning: Please note thus test is only feasible for helm chart deployment. 
 
 ### Built-in Scripts
 

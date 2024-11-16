@@ -29,6 +29,9 @@ accountService:
     minReplicas: 1
     maxReplicas: 3
     targetCPUUtilizationPercentage: 60
+  # This should only be enabled in the development environment.
+  chaosMonkey:
+    enabled: false
 
 transactionService:
   image: app-transaction-service:0.0.1-SNAPSHOT

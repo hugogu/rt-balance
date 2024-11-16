@@ -28,7 +28,8 @@ You may need to refer to
     ./gradlew :app-account-service:bootBuildImage
     ./gradlew :app-transaction-service:bootBuildImage
     ```
-  
+
+:warning: Build from IntelliJ IDEA may not work as expected because it may not pick up the correct DOCKER_HOST from environment.
 :warning: The image built is for amd64 architecture, it may not perform well for Mac Apple Silicon Chipset users. Spring Boot 3.4 will provide a native support to it.
 
 ## How to Deploy
@@ -53,6 +54,7 @@ docker-compose up -d account-service-api transaction-service-api
 ```bash
 ./gradlew test jacocoTestReport testAggregateTestReport -DexcludeTags=integration
 ```
+
 * To run all integration test
 ```bash
 # Bring up local environment
@@ -61,6 +63,7 @@ docker-compose up -d postgres redis kafka
 # Open test report
 open test-results/build/reports/tests/unit-test/aggregated-results/index.html
 ```
+
 * To run dependent integration test (some tests in transaction-service requires account-service to be running)
 ```bash
 ./gradlew :app-account-service:bootRun

@@ -1,0 +1,16 @@
+chaos:
+  monkey:
+    enabled: true
+    watcher:
+      service: true
+      rest-controller: true
+      repository: true
+    assaults:
+      latencyActive: true
+      kill-application-active: true
+management:
+  endpoint:
+    chaosmonkey:
+      enabled: true
+    chaosmonkeyjmx:
+      enabled: true

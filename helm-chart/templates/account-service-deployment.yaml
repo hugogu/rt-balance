@@ -58,6 +58,10 @@ spec:
               value: "{{ .Values.accountService.tomcat.thread }}"
             - name: BPL_JVM_THREAD_COUNT
               value: "{{ .Values.accountService.jvm.thread }}"
+            {{- if .Values.accountService.chaosMonkey.enabled }}
+            - name: SPRING_PROFILES_ACTIVE
+              value: "chaos,chaos-monkey"
+            {{- end }}
             # Allow remote debugging & profiling from local.
             - name: JAVA_OPTS
               value: "-Dcom.sun.management.jmxremote \

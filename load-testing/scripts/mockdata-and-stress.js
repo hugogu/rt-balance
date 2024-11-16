@@ -1,5 +1,5 @@
 import http from 'k6/http';
-import { check } from 'k6';
+import { check, sleep } from 'k6';
 import { uuidv4 } from 'https://jslib.k6.io/k6-utils/1.1.0/index.js';
 import { randomItem, randomIntBetween, randomString } from 'https://jslib.k6.io/k6-utils/1.1.0/index.js';
 
@@ -13,6 +13,30 @@ export let options = {
     ],
 };
 
+export let host = __ENV.TARGET_HOST || 'http://localhost:8080';
+export let chaosMonkeyUrl = `${host}/actuator/chaosmonkey/assaults/runtime/attack`;
+export let enableChaosMonkey = __ENV.ENABLE_CHAOS_MONKEY || 'false';
+
+export function setup() {
+    // Start a delayed task to call the Chaos Monkey attack endpoint after 10 seconds
+    if (enableChaosMonkey === 'true') {
+        // Start a background thread to call the Chaos Monkey attack endpoint after 10 seconds
+        new Promise((resolve) => {
+            sleep(10);
+            let chaosRes = http.post(chaosMonkeyUrl);
+            check(chaosRes, {
+                'chaos monkey attack triggered': (r) => r.status === 200,
+            });
+            if (chaosRes.status !== 200) {
+                console.error(`Chaos Monkey attack failed: ${chaosRes.status}`);
+            } else {
+                console.warn('Chaos Monkey attack triggered');
+            }
+            resolve();
+        });
+    }
+}
+
 export default function () {
     // Generate mock account data
     const account = {
@@ -21,7 +45,7 @@ export default function () {
     };
 
     // Create account
-    let res = http.post('http://localhost:8080/account', JSON.stringify(account), {
+    let res = http.post(`${host}/account`, JSON.stringify(account), {
         headers: {
             'Content-Type': 'application/json',
             'X-Request-ID': uuidv4().toString()
@@ -65,7 +89,7 @@ export default function () {
         };
 
         // Create transaction
-        res = http.post('http://localhost:8080/account:transfer', JSON.stringify(transaction), {
+        res = http.post(`${host}/account:transfer`, JSON.stringify(transaction), {
             headers: {
                 'Content-Type': 'application/json',
                 'X-Request-ID': uuidv4().toString()
