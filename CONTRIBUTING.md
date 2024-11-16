@@ -14,8 +14,22 @@
 * Whenever eventually consistency is acceptable, prevent distributed lock which is usually a performance bottleneck.
 * Each external dependency should report its health status via `/actuator/health` endpoint. 
   Check [Liveness and Readiness Probes with Spring Boot](https://spring.io/blog/2020/03/25/liveness-and-readiness-probes-with-spring-boot) for more details.
+* API design should follow
+  * [RESTful API design](https://restfulapi.net/).
+  * [Microsoft Azure REST API Guidelines](https://github.com/microsoft/api-guidelines/blob/vNext/azure/Guidelines.md)
 
-## Code commit
+## Development Requirement
+
+### Library Usage
+
+* Spring family is the first choice. Whenever a functionality can be achieved by Spring, it should be used. ** No reinventing the wheel.**
+
+### Non-Functional Requirement
+
+* All exceptional behaviour shall be logged with sufficient details.
+* Feign client should think of holding its own data model, rather than directly using the data model from the service it calls.
+
+### Code commit
 
 * Commit message should follow [conventional commits](https://www.conventionalcommits.org/en/v1.0.0/)
 * [Github pipeline](https://github.com/hugogu/rt-balance/actions) MUST success before merging.
