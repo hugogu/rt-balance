@@ -7,9 +7,9 @@ let accountIds = [];
 
 export let options = {
     stages: [
-        { duration: '10s', target: 200 },
-        { duration: '5s', target: 200 },
-        { duration: '10s', target: 0 },
+        { duration: '10s', target: 100 },
+        { duration: '45s', target: 100 },
+        { duration: '5s', target: 0 },
     ],
 };
 

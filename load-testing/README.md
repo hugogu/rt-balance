@@ -17,7 +17,7 @@ Bring up a local instance of the `account-service` and run the load testing scri
    ```
 
 You will see something like this:
-![benchmark](../docs/img/k6-benchmark.png)
+![benchmark](../docs/img/K6-Benchmark.png)
 
 In the figure above, it shows a result of a stress test lasting 25 seconds and 60K request was processed during that time. 
 
@@ -27,8 +27,8 @@ The TPS of account-service is around 2400 and the p(95) latency is 85ms (in my l
 
 There are some built-in scripts in the `./load-testing/scripts` directory. You can use them directly.
 
-* **mockdata-and-stress.js**: This script create account and make transaction between those account randomly with 200 vu (virtual user).
-* **create-account-stress.js**: This script only perform create accounts request with 200 concurrent vu.
+* **mockdata-and-stress.js**: This script create account and make transaction between those account randomly with 100 vu (virtual user).
+* **create-account-stress.js**: This script only perform create accounts request with 100 concurrent vu.
 
 ## Advanced Use Cases with Diagrams
 

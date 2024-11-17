@@ -27,7 +27,7 @@ kubectl proxy
 open http://localhost:8001/api/v1/namespaces/kubernetes-dashboard/services/https:kubernetes-dashboard:/proxy/
 ```
 Once deployed successfully, your dashboard should show something like this:
-![K8s Dashboard](../docs/img/dashboard.png)
+![K8s Dashboard](../docs/img/Dashboard.png)
 
 * Upgrade if case of any helm update
 ```bash
@@ -54,3 +54,19 @@ After deployment, you may want to expose them to the host machine for testing pu
     ```bash
     minikube service account-service --url
     ```
+
+Please note, if you connect to svc/account-service, only one of the account-service will be connected.
+
+### Stability Tweaks
+
+#### Pod QoS Class
+
+The pod [QoS class](https://kubernetes.io/docs/concepts/workloads/pods/pod-qos/) should be `Guaranteed` or `BestEffort` for the account-service and transaction-service pods. 
+This ensures that the pods are not evicted from the node due to resource constraints.
+
+#### Pod Anti-Affinity
+
+Pod anti-affinity is set to `required` for the account-service and transaction-service pods.
+So that the pods are not scheduled on the same node.
+
+It only works if there are multiple nodes in the cluster.

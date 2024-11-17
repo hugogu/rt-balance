@@ -5,8 +5,8 @@ server:
       # The default value 200 is too high which would slow down the application.
       # TPS will increase from 250 to 400 by changing the value to around 8 to 16 (based on CPU cores).
       max: 8
-    connection-timeout: 5s
-    max-keep-alive-requests: 32
+    connection-timeout: 20s
+    max-keep-alive-requests: 100
 
 spring:
   application:

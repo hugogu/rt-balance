@@ -1,6 +1,7 @@
 ingress:
   enabled: true
   host: localhost
+  timeout: 30s
 
 redis:
   enabled: true
@@ -10,6 +11,8 @@ redis:
 accountService:
   image: account-service:0.0.1-SNAPSHOT
   replicas: 2
+  tomcat:
+    thread: 8
   db:
     host: account-db
     user: postgres
@@ -20,13 +23,15 @@ accountService:
     bootstrapServers: kafka:9092
   hpa:
     enabled: true
-    minReplicas: 1
-    maxReplicas: 3
-    targetCPUUtilizationPercentage: 70
+    minReplicas: 2
+    maxReplicas: 4
+    targetCPUUtilizationPercentage: 60
 
 transactionService:
   image: transaction-service:0.0.1-SNAPSHOT
-  replicas: 2
+  replicas: 1
+  tomcat:
+    thread: 4
   db:
     host: transaction-db
     user: postgres
@@ -35,7 +40,7 @@ transactionService:
     enabled: true
     minReplicas: 1
     maxReplicas: 3
-    targetCPUUtilizationPercentage: 70
+    targetCPUUtilizationPercentage: 60
   accountService:
     url: http://account-service
 
@@ -68,6 +73,7 @@ probes:
       path: /actuator/health/liveness
       port: 8080
     failureThreshold: 3
+    successThreshold: 1
     initialDelaySeconds: 40
     periodSeconds: 20
     timeoutSeconds: 20
@@ -77,7 +83,8 @@ probes:
       port: 8080
     # When all instances become unready, the service will be unavailable and return 503.
     # So it should be cautious to set the failureThreshold.
-    failureThreshold: 5
+    failureThreshold: 3
+    successThreshold: 1
     initialDelaySeconds: 45
     periodSeconds: 5
     timeoutSeconds: 20
