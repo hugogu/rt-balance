@@ -5,6 +5,7 @@ CREATE TABLE IF NOT EXISTS transaction
     to_account       uuid          NOT NULL,
     amount           decimal(10,4) NOT NULL,
     currency         char(3)       NOT NULL,
+    status           varchar(16)   NOT NULL,
     transaction_time timestamp     NOT NULL,
     settle_time      timestamp     NOT NULL,
     create_time      timestamp     NOT NULL DEFAULT now(),

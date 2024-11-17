@@ -57,6 +57,13 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
+      - name: Install PostgreSQL client
+        run: apt-get update && apt-get install -y --no-install-recommends postgresql-client
+
+      - name: Create transaction database
+        run: |
+          PGPASSWORD=postgres psql -h postgres -U postgres -c "CREATE DATABASE transaction;"
+
       - name: Build with Gradle
         run: ./gradlew build
         env:

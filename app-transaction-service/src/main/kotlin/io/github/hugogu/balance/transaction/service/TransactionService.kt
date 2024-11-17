@@ -7,7 +7,7 @@ import io.github.hugogu.balance.transaction.repo.TransactionEntity
 import io.github.hugogu.balance.transaction.repo.TransactionRepo
 import io.github.hugogu.balance.transaction.repo.TransactionStatus
 import io.github.hugogu.balance.transaction.service.error.TransactionBusinessError
-import io.github.hugogu.balance.transaction.service.error.TransactionNotFoundException
+import jakarta.persistence.EntityNotFoundException
 import org.slf4j.LoggerFactory
 import org.springframework.dao.DataAccessException
 import org.springframework.scheduling.annotation.Async
@@ -48,14 +48,15 @@ class TransactionService(
      * Another option is to introduce a messaging broker between transaction and account service.
      */
     @Async
-    fun processTransactionAsync(transactionId: UUID) {
+    fun processTransactionAsync(transactionId: UUID): TransactionEntity? {
         val transaction = transactionRepo.findById(transactionId).orElseThrow {
-            TransactionNotFoundException(transactionId.toString())
+            EntityNotFoundException("Can't find transaction $transactionId")
         }
         val transactionMessage = buildMessage(transaction)
-        when (transaction.status) {
+
+        return when (transaction.status) {
             TransactionStatus.PENDING, TransactionStatus.FAILED -> {
-                try {
+                return try {
                     accountServiceClient.processTransactionWithRetry(transactionMessage)
                     transactionRepo.updateTransactionStatus(transactionId, TransactionStatus.COMPLETED)
                 } catch (e: DataAccessException) {
@@ -65,6 +66,7 @@ class TransactionService(
             }
             else -> {
                 /* NOOP */
+                null
             }
         }
     }

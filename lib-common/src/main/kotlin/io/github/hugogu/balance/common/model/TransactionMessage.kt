@@ -3,7 +3,7 @@ package io.github.hugogu.balance.common.model
 import io.github.hugogu.balance.common.validation.NotZeroUUID
 import java.math.BigDecimal
 import java.time.Instant
-import java.util.*
+import java.util.UUID
 
 data class TransactionMessage(
     @field:NotZeroUUID

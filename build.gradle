@@ -99,6 +99,9 @@ subprojects {
             // Exclude integration test that requires a local account-service to be running.
             excludeTags 'require-account'
         }
+        jvmArgs += [
+                '--add-opens=java.base/java.lang=ALL-UNNAMED'
+        ]
         reports {
             junitXml.required = true
         }

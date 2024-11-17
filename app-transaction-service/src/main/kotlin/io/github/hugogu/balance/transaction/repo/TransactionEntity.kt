@@ -32,7 +32,7 @@ class TransactionEntity : EntityBase() {
 
     var transactionTime: Instant = Instant.EPOCH
 
-    var settleTime: Instant? = null
+    var settleTime: Instant = Instant.now()
 
     @LastModifiedDate
     @Column(name = "last_update")

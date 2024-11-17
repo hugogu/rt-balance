@@ -46,17 +46,17 @@ interface AccountServiceClient {
     }
 
     @Retryable
-    fun debitAccount(accountId: UUID, amount: BigDecimal, transactionRequestId: UUID): AccountDetail {
+    fun debitAccountAmount(accountId: UUID, amount: BigDecimal, transactionRequestId: UUID): AccountDetail {
         val request = AccountUpdateRequest(amount)
-        val requestId = UUID.fromString(transactionRequestId.toString() + accountId.toString())
+        val requestId = UUID.nameUUIDFromBytes((transactionRequestId.toString() + accountId.toString()).toByteArray())
 
         return debitAccount(accountId, request, requestId)
     }
 
     @Retryable
-    fun creditAccount(accountId: UUID, amount: BigDecimal, transactionRequestId: UUID): AccountDetail {
+    fun creditAccountAmount(accountId: UUID, amount: BigDecimal, transactionRequestId: UUID): AccountDetail {
         val request = AccountUpdateRequest(amount)
-        val requestId = UUID.fromString(transactionRequestId.toString() + accountId.toString())
+        val requestId = UUID.nameUUIDFromBytes((transactionRequestId.toString() + accountId.toString()).toByteArray())
 
         return creditAccount(accountId, request, requestId)
     }
