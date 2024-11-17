@@ -34,9 +34,15 @@ class AccountController(
          */
         @RequestHeader("X-Request-ID") requestId: UUID,
     ): ResponseEntity<AccountIdentity> {
-        val entity = accountService.createAccount(request.accountNumber, request.currency.currencyCode, requestId)
+        val entity = accountService.createAccount(
+            request.accountNumber,
+            request.currency.currencyCode,
+            request.balance,
+            requestId
+        )
 
-        return ResponseEntity.status(HttpStatus.CREATED).body(AccountIdentity(entity.id!!))
+        return ResponseEntity.status(HttpStatus.CREATED)
+            .body(AccountIdentity(entity.id!!))
     }
 
     @GetMapping("/account/{id}")

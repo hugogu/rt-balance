@@ -30,7 +30,7 @@ class AccountServiceCacheIntegrationTest {
 
     @Test
     fun queryAccountDetailCacheTest(){
-        val account = accountService.createAccount("123456", "USD", UUID.randomUUID())
+        val account = accountService.createAccount("123456", "USD", BigDecimal("1000000"))
 
         // Cache the account details
         accountService.queryAccountDetail(account.id!!)
@@ -46,8 +46,8 @@ class AccountServiceCacheIntegrationTest {
 
     @Test
     fun processTransactionCacheEvictTest() {
-        val accountA = accountService.createAccount("123456", "USD", UUID.randomUUID())
-        val accountB = accountService.createAccount("123457", "USD", UUID.randomUUID())
+        val accountA = accountService.createAccount("123456", "USD", BigDecimal("1000000"))
+        val accountB = accountService.createAccount("123457", "USD", BigDecimal("1000000"))
         val transactionMessage = TransactionMessage(
             transactionId = UUID.randomUUID(),
             fromAccount = accountA.id!!,

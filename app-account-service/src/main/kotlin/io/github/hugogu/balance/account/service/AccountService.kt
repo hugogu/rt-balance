@@ -29,7 +29,7 @@ import org.springframework.transaction.annotation.Transactional
 import org.springframework.validation.annotation.Validated
 import java.math.BigDecimal
 import java.time.Duration
-import java.util.*
+import java.util.UUID
 import kotlin.ConcurrentModificationException
 
 typealias AccountPair = Pair<AccountEntity, AccountEntity>
@@ -46,11 +46,17 @@ class AccountService(
     private val valueOperations = redisOperations.opsForValue()
 
     @Transactional
-    fun createAccount(accountNumber: String, accountCcy: String, requestId: UUID): AccountEntity {
+    fun createAccount(
+        accountNumber: String,
+        accountCcy: String,
+        balance: BigDecimal,
+        requestId: UUID = UUID.randomUUID()
+    ): AccountEntity {
         val account = AccountEntity()
         account.setId(requestId)
         account.accountNumber = accountNumber
         account.accountCcy = accountCcy
+        account.balance = balance
         return accountRepo.save(account)
     }
 
@@ -136,6 +142,11 @@ class AccountService(
         }
     }
 
+    /**
+     * Assume overdraft is allowed. The account balance can be negative.
+     *
+     * TODO: Support OD limit.
+     */
     @Transactional(isolation = Isolation.REPEATABLE_READ)
     fun debitAccount(accountId: UUID, amount: BigDecimal, requestId: UUID): AccountEntity {
         return processWithLock("request-lock:${requestId}") {

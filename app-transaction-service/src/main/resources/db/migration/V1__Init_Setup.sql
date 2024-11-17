@@ -3,7 +3,7 @@ CREATE TABLE IF NOT EXISTS transaction
     id               uuid PRIMARY KEY,
     from_account     uuid          NOT NULL,
     to_account       uuid          NOT NULL,
-    amount           decimal(10,4) NOT NULL,
+    amount           decimal(19,4) NOT NULL,
     currency         char(3)       NOT NULL,
     status           varchar(16)   NOT NULL,
     transaction_time timestamp     NOT NULL,

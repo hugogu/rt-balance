@@ -18,7 +18,7 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 import java.math.BigDecimal
-import java.util.*
+import java.util.UUID
 
 @Tag("integration")
 @ExtendWith(SpringExtension::class)
@@ -33,21 +33,17 @@ class AccountControllerIntegrationTest {
     private lateinit var objectMapper: ObjectMapper
 
     @Test
-    fun `test createAccountAndQueryDetail`() {
+    fun createAccountAndQueryDetailTest() {
         val requestId = UUID.randomUUID()
+        val accountCreationRequest = AccountCreationRequest(
+            accountNumber = "123456",
+            balance = BigDecimal("10000")
+        )
         mockMvc.perform(
             post("/account")
                 .contentType(MediaType.APPLICATION_JSON)
                 .header("X-Request-ID", requestId.toString())
-                .content(
-                    """
-                    {
-                        "accountNumber": "123456",
-                        "currency": "USD"
-                    }
-                """.trimIndent()
-                )
-        )
+                .content(objectMapper.writeValueAsString(accountCreationRequest)))
             .andExpect(status().isCreated)
             .andExpect(jsonPath("$.id").value(requestId.toString()))
 
@@ -56,7 +52,7 @@ class AccountControllerIntegrationTest {
             .andExpect(jsonPath("$.id").value(requestId.toString()))
             .andExpect(jsonPath("$.accountNumber").value("123456"))
             .andExpect(jsonPath("$.accountCurrency").value("USD"))
-            .andExpect(jsonPath("$.balance").value(0.0))
+            .andExpect(jsonPath("$.balance").value(10000.0))
     }
 
     @ParameterizedTest
@@ -65,8 +61,7 @@ class AccountControllerIntegrationTest {
         mockMvc.perform(
             post("/account")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(body)
-        )
+                .content(body))
             .andExpect(status().isBadRequest)
     }
 
@@ -87,41 +82,65 @@ class AccountControllerIntegrationTest {
         mockMvc.perform(
             post("/account:transfer")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(transactionMessage))
-        )
+                .content(objectMapper.writeValueAsString(transactionMessage)))
             .andExpect(status().isBadRequest)
     }
 
     @Test
-    fun `test processTransaction`() {
+    fun accountDebitCreditTest() {
         val accountA = UUID.randomUUID()
+        val accountACreationRequest = AccountCreationRequest(
+            accountNumber = "123456",
+            balance = BigDecimal("10000")
+        )
         mockMvc.perform(
             post("/account")
                 .contentType(MediaType.APPLICATION_JSON)
                 .header("X-Request-ID", accountA.toString())
-                .content(
-                    """
-                    {
-                        "accountNumber": "123456",
-                        "currency": "USD"
-                    }
-                """.trimIndent()
-                )
+                .content(objectMapper.writeValueAsString(accountACreationRequest)))
+
+        mockMvc.perform(
+            post("/account:debit/$accountA")
+                .contentType(MediaType.APPLICATION_JSON)
+                .header("X-Request-ID", accountA.toString())
+                .content(objectMapper.writeValueAsString(AccountDebitRequest(BigDecimal("10000")))))
+
+        mockMvc.perform(
+            post("/account:credit/$accountA")
+                .contentType(MediaType.APPLICATION_JSON)
+                .header("X-Request-ID", accountA.toString())
+                .content(objectMapper.writeValueAsString(AccountDebitRequest(BigDecimal("3000")))))
+
+        mockMvc.perform(get("/account/$accountA").contentType(MediaType.APPLICATION_JSON))
+            .andExpect(status().isOk)
+            .andExpect(jsonPath("$.id").value(accountA.toString()))
+            .andExpect(jsonPath("$.accountNumber").value("123456"))
+            .andExpect(jsonPath("$.accountCurrency").value("USD"))
+            .andExpect(jsonPath("$.balance").value(3000))
+    }
+
+    @Test
+    fun processTransactionTest() {
+        val accountA = UUID.randomUUID()
+        val accountACreationRequest = AccountCreationRequest(
+            accountNumber = "123456",
+            balance = BigDecimal("10000")
         )
+        mockMvc.perform(
+            post("/account")
+                .contentType(MediaType.APPLICATION_JSON)
+                .header("X-Request-ID", accountA.toString())
+                .content(objectMapper.writeValueAsString(accountACreationRequest)))
         val accountB = UUID.randomUUID()
+        val accountBCreationRequest = AccountCreationRequest(
+            accountNumber = "123457",
+            balance = BigDecimal("10000")
+        )
         mockMvc.perform(
             post("/account")
                 .contentType(MediaType.APPLICATION_JSON)
                 .header("X-Request-ID", accountB.toString())
-                .content(
-                    """
-                    {
-                        "accountNumber": "123457",
-                        "currency": "USD"
-                    }
-                """.trimIndent()
-                )
-        )
+                .content(objectMapper.writeValueAsString(accountBCreationRequest)))
         val transactionMessage = TransactionMessage(
             transactionId = UUID.randomUUID(),
             fromAccount = accountA,
@@ -133,8 +152,7 @@ class AccountControllerIntegrationTest {
             post("/account:transfer")
                 .contentType(MediaType.APPLICATION_JSON)
                 .header("X-Request-ID", transactionMessage.transactionId.toString())
-                .content(objectMapper.writeValueAsString(transactionMessage))
-        )
+                .content(objectMapper.writeValueAsString(transactionMessage)))
             .andExpect(status().isOk)
     }
 }

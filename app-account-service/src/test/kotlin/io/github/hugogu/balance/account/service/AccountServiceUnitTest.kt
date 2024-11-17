@@ -73,7 +73,7 @@ class AccountServiceUnitTest {
     @Test
     fun createAccountTest() {
         val requestId = UUID.randomUUID()
-        val accountEntity = accountService.createAccount("", "USD", requestId)
+        val accountEntity = accountService.createAccount("", "USD", BigDecimal("1000000"), requestId)
 
         assertEquals(requestId, accountEntity.id)
     }
