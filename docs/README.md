@@ -13,3 +13,8 @@ This folder contains the documentation for the Realtime Balance System.
   * [transaction-service Coverage Report](https://htmlpreview.github.io/?https://github.com/hugogu/rt-balance/blob/test-results/app-transaction-service/build/jacocoHtml/index.html)
   * [Performance Benchmark Report](./PerformanceBenchmark.md)
   * [Resilience Test Report](./ResilienceTestReport.md)
+* Style Check Reports
+  * [Account Service Detekt Report](https://htmlpreview.github.io/?https://github.com/hugogu/rt-balance/blob/test-results/app-account-service/build/reports/detekt/detekt.html)
+  * [Transaction Service Detekt Report](https://htmlpreview.github.io/?https://github.com/hugogu/rt-balance/blob/test-results/app-transaction-service/build/reports/detekt/detekt.html)
+
+Please note these reports were executed & generated locally and committed into `test-results` branch of this repo. 

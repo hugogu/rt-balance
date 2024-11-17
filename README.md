@@ -53,17 +53,10 @@ open test-results/build/reports/tests/unit-test/aggregated-results/index.html
 ```
 * To run dependent integration test (some tests in transaction-service requires account-service to be running)
 ```bash
-./gradlew :account-service:bootRun
-./gradlew :transaction-service:test jacocoTestReport testAggregateTestReport -DincludeTags=require-account,integration
+./gradlew :app-account-service:bootRun
+./gradlew :app-transaction-service:test jacocoTestReport testAggregateTestReport -DincludeTags=require-account,integration
 ```
 
 #### Test Reports
 
-* Check latest [Overall Test Reports](https://htmlpreview.github.io/?https://github.com/hugogu/rt-balance/blob/test-results/test-results/build/reports/tests/unit-test/aggregated-results/index.html). 
-* Check [account-service coverage report](https://htmlpreview.github.io/?https://github.com/hugogu/rt-balance/blob/test-results/app-account-service/build/jacocoHtml/index.html)
-* Check [transaction-service coverage report](https://htmlpreview.github.io/?https://github.com/hugogu/rt-balance/blob/test-results/app-transaction-service/build/jacocoHtml/index.html)
-
-:warning: Please note this requires committing reports in `build` to `test-results` branch of this repo.
-
-### Stress Test
-Please refer to the [load-testing](./load-testing/README.md) for usage information & benchmark result.
+Refer to the [docs folder](./docs/README.md) for test reports.
