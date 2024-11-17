@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ApiErrorHandlingAdvice.kt</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">lib-common</a> &gt; <a href="index.source.html" class="el_package">io.github.hugogu.balance.common.error</a> &gt; <span class="el_source">ApiErrorHandlingAdvice.kt</span></div><h1>ApiErrorHandlingAdvice.kt</h1><pre class="source lang-java linenums">package io.github.hugogu.balance.common.error
+
+import jakarta.persistence.EntityNotFoundException
+import jakarta.validation.ConstraintViolationException
+import jakarta.validation.ValidationException
+import org.slf4j.LoggerFactory
+import org.springframework.dao.CannotAcquireLockException
+import org.springframework.http.HttpStatus
+import org.springframework.util.StringUtils
+import org.springframework.web.ErrorResponse
+import org.springframework.web.bind.MethodArgumentNotValidException
+import org.springframework.web.bind.annotation.ControllerAdvice
+import org.springframework.web.bind.annotation.ExceptionHandler
+
+<span class="fc" id="L15">@ControllerAdvice</span>
+class ApiErrorHandlingAdvice {
+    @ExceptionHandler(CannotAcquireLockException::class)
+    fun handException(e: CannotAcquireLockException): ErrorResponse {
+<span class="fc" id="L19">        log.warn(&quot;ExceptionHandler hands CannotAcquireLockException&quot;, e)</span>
+<span class="pc bpc" id="L20" title="1 of 2 branches missed.">        return ErrorResponse.create(e, HttpStatus.TOO_MANY_REQUESTS, e.message.orEmpty())</span>
+    }
+
+    @ExceptionHandler(ConcurrentModificationException::class)
+    fun handConcurrentNotificationException(e: ConcurrentModificationException): ErrorResponse {
+<span class="fc" id="L25">        log.warn(&quot;ExceptionHandler hands ConcurrentModificationException&quot;, e)</span>
+<span class="pc bpc" id="L26" title="1 of 2 branches missed.">        return ErrorResponse.create(e, HttpStatus.TOO_MANY_REQUESTS, e.message.orEmpty())</span>
+    }
+
+    @ExceptionHandler(EntityNotFoundException::class)
+    fun handEntityNotFoundException(e: EntityNotFoundException): ErrorResponse {
+<span class="fc" id="L31">        log.warn(&quot;ExceptionHandler hands EntityNotFoundException&quot;, e)</span>
+<span class="pc bpc" id="L32" title="1 of 2 branches missed.">        return ErrorResponse.create(e, HttpStatus.BAD_REQUEST, e.message.orEmpty())</span>
+    }
+
+    @ExceptionHandler(ValidationException::class)
+    fun handValidationException(e: ValidationException): ErrorResponse {
+<span class="fc" id="L37">        log.info(&quot;ExceptionHandler hands ViolationException&quot;, e)</span>
+<span class="pc bpc" id="L38" title="1 of 2 branches missed.">        return ErrorResponse.create(e, HttpStatus.BAD_REQUEST, e.message.orEmpty())</span>
+    }
+
+    @ExceptionHandler(MethodArgumentNotValidException::class)
+    fun handMethodArgumentNotValidException(e: MethodArgumentNotValidException): ErrorResponse {
+<span class="fc" id="L43">        log.info(&quot;ExceptionHandler hands MethodArgumentNotValidException&quot;, e)</span>
+<span class="fc" id="L44">        val message = StringUtils.collectionToDelimitedString(</span>
+<span class="fc" id="L45">            e.bindingResult.allErrors.stream().map {</span>
+<span class="fc" id="L46">                oe -&gt; oe.defaultMessage</span>
+<span class="fc" id="L47">            }.toList(),&quot;\r\n&quot;</span>
+        )
+<span class="fc" id="L49">        return ErrorResponse.create(e, HttpStatus.BAD_REQUEST, message)</span>
+    }
+
+    @ExceptionHandler(ConstraintViolationException::class)
+    fun handConstraintValidationException(e: ConstraintViolationException): ErrorResponse {
+<span class="fc" id="L54">        log.info(&quot;ExceptionHandler hands ConstraintViolationException&quot;, e)</span>
+<span class="fc" id="L55">        val message = StringUtils.collectionToDelimitedString(</span>
+<span class="pc" id="L56">            e.constraintViolations.stream().map {</span>
+<span class="nc" id="L57">                cv -&gt; cv.propertyPath + &quot;:&quot; + cv.message</span>
+<span class="fc" id="L58">            }.toList(), &quot;\r\n&quot;</span>
+        )
+<span class="fc" id="L60">        return ErrorResponse.create(e, HttpStatus.BAD_REQUEST, message)</span>
+    }
+
+    companion object {
+<span class="fc" id="L64">        private val log = LoggerFactory.getLogger(ApiErrorHandlingAdvice::class.java)</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

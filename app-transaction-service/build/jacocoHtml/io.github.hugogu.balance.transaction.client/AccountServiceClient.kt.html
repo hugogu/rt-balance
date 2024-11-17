@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>AccountServiceClient.kt</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">app-transaction-service</a> &gt; <a href="index.source.html" class="el_package">io.github.hugogu.balance.transaction.client</a> &gt; <span class="el_source">AccountServiceClient.kt</span></div><h1>AccountServiceClient.kt</h1><pre class="source lang-java linenums">package io.github.hugogu.balance.transaction.client
+
+import io.github.hugogu.balance.common.model.TransactionMessage
+import org.springframework.cloud.openfeign.FeignClient
+import org.springframework.retry.annotation.Retryable
+import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.PathVariable
+import org.springframework.web.bind.annotation.PostMapping
+import org.springframework.web.bind.annotation.RequestBody
+import org.springframework.web.bind.annotation.RequestHeader
+import java.math.BigDecimal
+import java.util.*
+
+@FeignClient(name = &quot;account-service&quot;, url = &quot;\${account.service.url}&quot;)
+interface AccountServiceClient {
+
+    @PostMapping(&quot;/account&quot;)
+    fun createAccount(
+        @RequestBody request: AccountCreationRequest,
+        @RequestHeader(&quot;X-Request-ID&quot;) requestId: UUID
+    ): AccountIdentity
+
+    @GetMapping(&quot;/account/{id}&quot;)
+    fun queryAccountDetail(@PathVariable id: UUID): AccountDetail
+
+    @PostMapping(&quot;/account:transfer&quot;)
+    fun processTransaction(transaction: TransactionMessage): AccountDetail
+
+    @PostMapping(&quot;/account:debit/{accountId}&quot;)
+    fun debitAccount(
+        @PathVariable accountId: UUID,
+        @RequestBody request: AccountUpdateRequest,
+        @RequestHeader(&quot;X-Request-ID&quot;) requestId: UUID
+    ): AccountDetail
+
+    @PostMapping(&quot;/account:credit/{accountId}&quot;)
+    fun creditAccount(
+        @PathVariable accountId: UUID,
+        @RequestBody request: AccountUpdateRequest,
+        @RequestHeader(&quot;X-Request-ID&quot;) requestId: UUID
+    ): AccountDetail
+
+    @Retryable
+    fun processTransactionWithRetry(transaction: TransactionMessage): AccountDetail {
+<span class="fc" id="L45">        return processTransaction(transaction)</span>
+    }
+
+    @Retryable
+    fun debitAccountAmount(accountId: UUID, amount: BigDecimal, transactionRequestId: UUID): AccountDetail {
+<span class="fc" id="L50">        val request = AccountUpdateRequest(amount)</span>
+<span class="fc" id="L51">        val requestId = UUID.nameUUIDFromBytes((transactionRequestId.toString() + accountId.toString()).toByteArray())</span>
+
+<span class="fc" id="L53">        return debitAccount(accountId, request, requestId)</span>
+    }
+
+    @Retryable
+    fun creditAccountAmount(accountId: UUID, amount: BigDecimal, transactionRequestId: UUID): AccountDetail {
+<span class="fc" id="L58">        val request = AccountUpdateRequest(amount)</span>
+<span class="fc" id="L59">        val requestId = UUID.nameUUIDFromBytes((transactionRequestId.toString() + accountId.toString()).toByteArray())</span>
+
+<span class="fc" id="L61">        return creditAccount(accountId, request, requestId)</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>TransactionService.kt</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">app-transaction-service</a> &gt; <a href="index.source.html" class="el_package">io.github.hugogu.balance.transaction.service</a> &gt; <span class="el_source">TransactionService.kt</span></div><h1>TransactionService.kt</h1><pre class="source lang-java linenums">package io.github.hugogu.balance.transaction.service
+
+import io.github.hugogu.balance.common.model.AccountStatus
+import io.github.hugogu.balance.common.model.TransactionMessage
+import io.github.hugogu.balance.transaction.client.AccountServiceClient
+import io.github.hugogu.balance.transaction.repo.TransactionEntity
+import io.github.hugogu.balance.transaction.repo.TransactionRepo
+import io.github.hugogu.balance.transaction.repo.TransactionStatus
+import io.github.hugogu.balance.transaction.service.error.TransactionBusinessError
+import jakarta.persistence.EntityNotFoundException
+import org.slf4j.LoggerFactory
+import org.springframework.dao.DataAccessException
+import org.springframework.scheduling.annotation.Async
+import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
+import java.math.BigDecimal
+import java.time.Instant
+import java.util.UUID
+
+@Service
+<span class="fc" id="L21">class TransactionService(</span>
+<span class="fc" id="L22">    private val transactionRepo: TransactionRepo,</span>
+<span class="fc" id="L23">    private val accountServiceClient: AccountServiceClient</span>
+) {
+    @Transactional
+    fun transfer(id: UUID, from: UUID, to: UUID, amount: BigDecimal): TransactionEntity {
+<span class="fc" id="L27">        val fromAccount = accountServiceClient.queryAccountDetail(from)</span>
+<span class="fc" id="L28">        val toAccount = accountServiceClient.queryAccountDetail(to)</span>
+<span class="pc bpc" id="L29" title="1 of 4 branches missed.">        if (fromAccount.status != AccountStatus.ACTIVE || toAccount.status != AccountStatus.ACTIVE) {</span>
+<span class="fc" id="L30">            throw TransactionBusinessError(&quot;Account status is not active&quot;)</span>
+        }
+<span class="fc" id="L32">        val transaction = TransactionEntity()</span>
+<span class="fc" id="L33">        transaction.setId(id)</span>
+<span class="fc" id="L34">        transaction.fromAccount = from</span>
+<span class="fc" id="L35">        transaction.toAccount = to</span>
+<span class="fc" id="L36">        transaction.amount = amount</span>
+<span class="fc" id="L37">        transaction.status = TransactionStatus.PENDING</span>
+<span class="fc" id="L38">        transaction.currency = fromAccount.currency.currencyCode</span>
+<span class="fc" id="L39">        transaction.transactionTime = Instant.now()</span>
+
+<span class="fc" id="L41">        return transactionRepo.save(transaction)</span>
+    }
+
+    /**
+     * The workflow saga of the transaction processing.
+     * Driven by the transaction status.
+     * TODO: separate Saga status from transaction status by using temporal.io or other workflow engine
+     * Another option is to introduce a messaging broker between transaction and account service.
+     */
+    @Async
+    fun processTransactionAsync(transactionId: UUID): TransactionEntity? {
+<span class="fc" id="L52">        val transaction = transactionRepo.findById(transactionId).orElseThrow {</span>
+<span class="nc" id="L53">            EntityNotFoundException(&quot;Can't find transaction $transactionId&quot;)</span>
+        }
+<span class="fc" id="L55">        val transactionMessage = buildMessage(transaction)</span>
+
+<span class="pc bpc" id="L57" title="1 of 2 branches missed.">        return when (transaction.status) {</span>
+            TransactionStatus.PENDING, TransactionStatus.FAILED -&gt; {
+<span class="fc" id="L59">                return try {</span>
+<span class="fc" id="L60">                    accountServiceClient.processTransactionWithRetry(transactionMessage)</span>
+<span class="fc" id="L61">                    transactionRepo.updateTransactionStatus(transactionId, TransactionStatus.COMPLETED)</span>
+<span class="fc" id="L62">                } catch (e: DataAccessException) {</span>
+<span class="fc" id="L63">                    log.error(&quot;Failed to process transaction&quot;, e)</span>
+<span class="fc" id="L64">                    transactionRepo.updateTransactionStatus(transactionId, TransactionStatus.FAILED)</span>
+                }
+            }
+            else -&gt; {
+                /* NOOP */
+<span class="nc" id="L69">                null</span>
+            }
+        }
+    }
+
+    companion object {
+<span class="fc" id="L75">        private val log = LoggerFactory.getLogger(TransactionService::class.java)</span>
+
+        fun buildMessage(transaction: TransactionEntity): TransactionMessage {
+<span class="fc" id="L78">            return TransactionMessage(</span>
+<span class="fc" id="L79">                transaction.id!!,</span>
+<span class="fc" id="L80">                transaction.fromAccount,</span>
+<span class="fc" id="L81">                transaction.toAccount,</span>
+<span class="fc" id="L82">                transaction.amount,</span>
+<span class="fc" id="L83">                transaction.transactionTime</span>
+            )
+        }
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

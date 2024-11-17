@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>TransactionProcessor.kt</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">app-account-service</a> &gt; <a href="index.source.html" class="el_package">io.github.hugogu.balance.account.service</a> &gt; <span class="el_source">TransactionProcessor.kt</span></div><h1>TransactionProcessor.kt</h1><pre class="source lang-java linenums">package io.github.hugogu.balance.account.service
+
+import io.github.hugogu.balance.account.config.KafkaConfig
+import io.github.hugogu.balance.account.repo.TransactionLogEntity
+import io.github.hugogu.balance.common.model.TransactionMessage
+import org.springframework.beans.factory.annotation.Qualifier
+import org.springframework.boot.autoconfigure.task.TaskExecutionAutoConfiguration.APPLICATION_TASK_EXECUTOR_BEAN_NAME
+import org.springframework.core.task.TaskExecutor
+import org.springframework.kafka.annotation.KafkaListener
+import org.springframework.kafka.annotation.RetryableTopic
+import org.springframework.retry.annotation.Backoff
+import org.springframework.stereotype.Service
+import org.springframework.validation.annotation.Validated
+
+@Validated
+@Service
+<span class="fc" id="L17">class TransactionProcessor(</span>
+<span class="fc" id="L18">    val accountService: AccountService,</span>
+<span class="fc" id="L19">    @Qualifier(APPLICATION_TASK_EXECUTOR_BEAN_NAME)</span>
+    private val asyncExecutor: TaskExecutor,
+) {
+    /**
+     * Dead message won't block further message processing and get automatically retries to improve the success rate.
+     *
+     * TODO: make these retry settings configurable if necessary.
+     */
+    @RetryableTopic(
+        attempts = &quot;3&quot;,
+        backoff = Backoff(delay = 1000 * 60, multiplier = 2.0),
+        retryTopicSuffix = &quot;-account-retry&quot;,
+        dltTopicSuffix = &quot;-account-dlt&quot;
+    )
+    @KafkaListener(
+        topics = [KafkaConfig.PENDING_TRANSACTION_TOPIC],
+        groupId = &quot;account-service-processor&quot;,
+        /**
+         * The order of message processing will effect the balance history of an account.
+         *
+         * By the nature of asynchronous processing, the order of message processing is not guaranteed.
+         * The processing logic need to handle the out-of-order messages in processing.
+         *
+         * TODO: 1. A thread affinity strategy base on fromAccount/toAccount may help locality of processing.
+         *       2. A time window that orders messages by timestamp may help to reduce the out-of-order messages.
+         */
+        concurrency = &quot;1&quot;
+    )
+    fun onReceivingPendingTransaction(transaction: TransactionMessage) {
+<span class="fc" id="L48">        captureAndProcessMessage(transaction)</span>
+<span class="fc" id="L49">    }</span>
+
+    private fun captureAndProcessMessage(transaction: TransactionMessage): TransactionLogEntity {
+<span class="fc" id="L52">        val entity = accountService.persistPendingTransactionMessage(transaction)</span>
+        // So that we can process the transaction asynchronously and consume kafka messages quicker.
+<span class="fc" id="L54">        asyncExecutor.execute {</span>
+<span class="fc" id="L55">            accountService.loadAndProcessLoggedTransaction(transaction.transactionId)</span>
+<span class="fc" id="L56">        }</span>
+
+<span class="fc" id="L58">        return entity</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

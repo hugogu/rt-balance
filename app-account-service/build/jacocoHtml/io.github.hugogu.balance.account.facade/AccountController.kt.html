@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>AccountController.kt</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">app-account-service</a> &gt; <a href="index.source.html" class="el_package">io.github.hugogu.balance.account.facade</a> &gt; <span class="el_source">AccountController.kt</span></div><h1>AccountController.kt</h1><pre class="source lang-java linenums">package io.github.hugogu.balance.account.facade
+
+import io.github.hugogu.balance.account.service.AccountService
+import io.github.hugogu.balance.common.model.TransactionMessage
+import jakarta.validation.Valid
+import org.springframework.beans.factory.annotation.Qualifier
+import org.springframework.boot.autoconfigure.task.TaskExecutionAutoConfiguration.APPLICATION_TASK_EXECUTOR_BEAN_NAME
+import org.springframework.core.task.AsyncTaskExecutor
+import org.springframework.http.HttpStatus
+import org.springframework.http.ResponseEntity
+import org.springframework.transaction.annotation.Transactional
+import org.springframework.validation.annotation.Validated
+import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.PathVariable
+import org.springframework.web.bind.annotation.PostMapping
+import org.springframework.web.bind.annotation.RequestBody
+import org.springframework.web.bind.annotation.RequestHeader
+import org.springframework.web.bind.annotation.RestController
+import java.util.UUID
+
+@Validated
+@RestController(&quot;/account&quot;)
+<span class="fc" id="L23">class AccountController(</span>
+<span class="fc" id="L24">    private val accountService: AccountService,</span>
+<span class="fc" id="L25">    @Qualifier(APPLICATION_TASK_EXECUTOR_BEAN_NAME)</span>
+    private val asyncExecutor: AsyncTaskExecutor,
+) {
+    @PostMapping(&quot;/account&quot;)
+    @Transactional
+    fun createAccount(
+        @Valid @RequestBody request: AccountCreationRequest,
+        /**
+         * Used as idempotent ID
+         */
+        @RequestHeader(&quot;X-Request-ID&quot;) requestId: UUID,
+    ): ResponseEntity&lt;AccountIdentity&gt; {
+<span class="fc" id="L37">        val entity = accountService.createAccount(</span>
+<span class="fc" id="L38">            request.accountNumber,</span>
+<span class="fc" id="L39">            request.currency.currencyCode,</span>
+<span class="fc" id="L40">            request.balance,</span>
+<span class="fc" id="L41">            requestId</span>
+        )
+
+<span class="fc" id="L44">        return ResponseEntity.status(HttpStatus.CREATED)</span>
+<span class="fc" id="L45">            .body(AccountIdentity(entity.id!!))</span>
+    }
+
+    @GetMapping(&quot;/account/{id}&quot;)
+    fun queryAccountDetail(@PathVariable id: UUID): AccountDetail {
+<span class="fc" id="L50">        val entity = accountService.queryAccountDetail(id)</span>
+
+<span class="fc" id="L52">        return AccountDetail.from(entity)</span>
+    }
+
+    /**
+     * Synchronously process transaction and return the updated account detail.
+     */
+    @PostMapping(&quot;/account:transfer&quot;)
+    fun processTransaction(@Valid @RequestBody transaction: TransactionMessage): AccountDetail {
+<span class="fc" id="L60">        val (fromAccount, _) = accountService.persistAndProcessTransaction(transaction) {</span>
+<span class="fc" id="L61">            accountService.processTransaction(transaction)</span>
+        }
+
+<span class="fc" id="L64">        return AccountDetail.from(fromAccount)</span>
+    }
+
+    /**
+     * This API is used to process the transaction message from the message queue.
+     * The response status 202 (ACCEPTED) to indicate that the message is accepted and will be processed asynchronously.
+     *
+     * TODO: move it into a standalone service for better separation of concerns.
+     */
+    @PostMapping(&quot;/account:transfer/message&quot;)
+    fun postTransactionMessage(@Valid @RequestBody transaction: TransactionMessage): ResponseEntity&lt;Void&gt; {
+<span class="nc" id="L75">        accountService.postTransactionMessageToBroker(transaction)</span>
+
+<span class="nc" id="L77">        return ResponseEntity.status(HttpStatus.ACCEPTED).build()</span>
+    }
+
+    /**
+     * This API stores the transaction in the database and then processes it asynchronously.
+     * people usually think that this is a good practice to improve the performance of the API.
+     * But in practice, it would depend on the actual situation where how long the processing time is.
+     * In this real time balance system, the processing time is usually very short,
+     * so it is not necessary to process it asynchronously.
+     *
+     * This API is only implemented for demonstration &amp; performance comparison purposes.
+     *
+     * The benchmark shows this api is 15% slower than the synchronous version with optimal thread pool settings.
+     */
+    @Deprecated(&quot;This API is only implemented for demonstration &amp; performance comparison purposes.&quot;)
+    @PostMapping(&quot;/account:transfer/async&quot;)
+    fun processTransactionAsync(@Valid @RequestBody transaction: TransactionMessage): ResponseEntity&lt;Void&gt; {
+<span class="nc" id="L94">        val entity = accountService.persistPendingTransactionMessage(transaction)</span>
+<span class="nc" id="L95">        asyncExecutor.submit {</span>
+<span class="nc" id="L96">            accountService.loadAndProcessLoggedTransaction(entity.id!!)</span>
+<span class="nc" id="L97">        }</span>
+
+<span class="nc" id="L99">        return ResponseEntity.status(HttpStatus.ACCEPTED).build()</span>
+    }
+
+    /**
+     * TODO: Lock requestID.
+     */
+    @PostMapping(&quot;/account:debit/{id}&quot;)
+    fun debitAccount(
+        @PathVariable id: UUID,
+        @Valid @RequestBody request: AccountDebitRequest,
+        /**
+         * Used as idempotent ID
+         */
+        @RequestHeader(&quot;X-Request-ID&quot;) requestId: UUID,
+    ): AccountDetail {
+<span class="fc" id="L114">        val entity = accountService.debitAccount(id, request.amount, requestId)</span>
+
+<span class="fc" id="L116">        return AccountDetail.from(entity)</span>
+    }
+
+    @PostMapping(&quot;/account:credit/{id}&quot;)
+    fun creditAccount(
+        @PathVariable id: UUID,
+        @Valid @RequestBody request: AccountCreditRequest,
+        /**
+         * Used as idempotent ID
+         */
+        @RequestHeader(&quot;X-Request-ID&quot;) requestId: UUID,
+    ): AccountDetail {
+<span class="fc" id="L128">        val entity = accountService.creditAccount(id, request.amount, requestId)</span>
+
+<span class="fc" id="L130">        return AccountDetail.from(entity)</span>
+    }
+
+    // TODO: add more account operations
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

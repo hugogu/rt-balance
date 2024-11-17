@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>AccountEntity.kt</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">app-account-service</a> &gt; <a href="index.source.html" class="el_package">io.github.hugogu.balance.account.repo</a> &gt; <span class="el_source">AccountEntity.kt</span></div><h1>AccountEntity.kt</h1><pre class="source lang-java linenums">package io.github.hugogu.balance.account.repo
+
+import io.github.hugogu.balance.common.EntityBase
+import io.github.hugogu.balance.common.model.AccountStatus
+import jakarta.persistence.Column
+import jakarta.persistence.Entity
+import jakarta.persistence.Table
+import org.springframework.data.annotation.LastModifiedDate
+import org.springframework.data.annotation.Version
+import java.math.BigDecimal
+import java.time.Instant
+
+<span class="fc" id="L13">@Entity</span>
+@Table(name = &quot;account&quot;)
+<span class="fc" id="L15">class AccountEntity : EntityBase() {</span>
+<span class="fc" id="L16">    @Column(name = &quot;account_num&quot;)</span>
+<span class="fc" id="L17">    var accountNumber: String = &quot;&quot;</span>
+
+    /**
+     * the ISO 4217 currency code of this currency.
+     */
+<span class="fc" id="L22">    var accountCcy: String = &quot;&quot;</span>
+
+    /**
+     * Weather to store a balance at account entity is one of the most critical design decision in the whole project.
+     *
+     * Here we assume the balance is often used in many different places and scenarios,
+     * so we store it in the account entity for the sake of performance.
+     * But it also brings some problems, such as the consistency between account and transaction service.
+     */
+<span class="fc" id="L31">    var balance: BigDecimal = BigDecimal.ZERO</span>
+
+<span class="fc" id="L33">    var status: AccountStatus = AccountStatus.ACTIVE</span>
+
+
+    /**
+     * This is a typical way to ensure data consistency between account and transaction service.
+     * It prevents money lost in the transaction process.
+     *
+     * Unfortunately, this is not a good way to handle the distributed transaction,
+     * it can easily become a bottleneck and a single point failure.
+     * It is better to use the Saga pattern for better performance and scalability.
+     *
+     * So it is not used in this sample project.
+     */
+<span class="fc" id="L46">    var lockedBalance: BigDecimal = BigDecimal.ZERO</span>
+
+<span class="fc" id="L48">    @LastModifiedDate</span>
+    @Column(name = &quot;last_update&quot;)
+<span class="fc" id="L50">    var lastModified: Instant = Instant.EPOCH</span>
+
+<span class="fc" id="L52">    @Version</span>
+<span class="fc" id="L53">    var version: Int = 0</span>
+}
+
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

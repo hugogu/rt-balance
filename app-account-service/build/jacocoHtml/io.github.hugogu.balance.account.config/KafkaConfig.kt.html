@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>KafkaConfig.kt</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">app-account-service</a> &gt; <a href="index.source.html" class="el_package">io.github.hugogu.balance.account.config</a> &gt; <span class="el_source">KafkaConfig.kt</span></div><h1>KafkaConfig.kt</h1><pre class="source lang-java linenums">package io.github.hugogu.balance.account.config
+
+import org.springframework.boot.context.properties.ConfigurationProperties
+import org.springframework.boot.context.properties.EnableConfigurationProperties
+import org.springframework.context.annotation.Bean
+import org.springframework.context.annotation.Configuration
+import org.springframework.kafka.config.TopicBuilder
+
+@Configuration
+@EnableConfigurationProperties(TopicCreationConfig::class)
+<span class="fc" id="L11">class KafkaConfig(</span>
+<span class="fc" id="L12">    private val creationConfig: TopicCreationConfig</span>
+) {
+<span class="fc" id="L14">    private val pendingTransactionTopic = creationConfig.topics.getOrDefault(PENDING_TRANSACTION_TOPIC, TopicConfig())</span>
+
+    /**
+     * For capturing pending transactions that need to be processed to calculate the balance.
+     * This topic should have enough partitions to allow for parallel processing of transactions.
+     *
+     * Messages in this topic should expire after a certain period of time as the transaction volume grows.
+     */
+    @Bean
+<span class="fc" id="L23">    fun pendingTransactionTopic() = TopicBuilder.name(PENDING_TRANSACTION_TOPIC)</span>
+<span class="fc" id="L24">        .partitions(pendingTransactionTopic.partitions)</span>
+<span class="fc" id="L25">        .replicas(pendingTransactionTopic.replicas)</span>
+<span class="fc" id="L26">        .build()</span>
+
+    companion object {
+        const val PENDING_TRANSACTION_TOPIC = &quot;pending-transaction&quot;
+    }
+}
+
+@ConfigurationProperties(prefix = &quot;kafka&quot;)
+<span class="pc" id="L34">data class TopicCreationConfig(</span>
+<span class="pc" id="L35">    val topics: Map&lt;String, TopicConfig&gt; = emptyMap()</span>
+<span class="nc" id="L36">)</span>
+
+<span class="fc" id="L38">data class TopicConfig(</span>
+<span class="pc" id="L39">    val name: String = &quot;&quot;,</span>
+<span class="fc" id="L40">    val partitions: Int = 1,</span>
+<span class="fc" id="L41">    val replicas: Int = 1</span>
+<span class="fc" id="L42">)</span>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>
