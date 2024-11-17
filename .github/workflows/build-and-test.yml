@@ -70,16 +70,16 @@ jobs:
         if: always()
         with:
           files: |
-            account-service/build/test-results/**/*.xml
-            transaction-service/build/test-results/**/*.xml
+            app-account-service/build/test-results/**/*.xml
+            app-transaction-service/build/test-results/**/*.xml
       - name: Add coverage to PR
         # https://github.com/marketplace/actions/jacoco-report
         id: jacoco
         uses: madrapps/jacoco-report@v1.7.1
         with:
           paths: |
-            ${{ github.workspace }}/account-service/build/reports/jacoco/test/jacocoTestReport.xml,
-            ${{ github.workspace }}/transaction-service/build/reports/jacoco/test/jacocoTestReport.xml
+            ${{ github.workspace }}/app-account-service/build/reports/jacoco/test/jacocoTestReport.xml,
+            ${{ github.workspace }}/app-transaction-service/build/reports/jacoco/test/jacocoTestReport.xml
           token: ${{ secrets.GITHUB_TOKEN }}
           min-coverage-overall: 40
           min-coverage-changed-files: 60

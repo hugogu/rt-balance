@@ -1,7 +1,7 @@
 version: '3'
 services:
   transaction-service-api:
-    image: transaction-service:0.0.1-SNAPSHOT
+    image: app-transaction-service:0.0.1-SNAPSHOT
     ports:
       - "8082:8082"
       - "5005:5005"
@@ -12,7 +12,7 @@ services:
     depends_on:
       - postgres
   account-service-api:
-    image: account-service:0.0.1-SNAPSHOT
+    image: app-account-service:0.0.1-SNAPSHOT
     ports:
       - "8080:8080"
       - "5005:5005"

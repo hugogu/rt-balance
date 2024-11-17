@@ -4,8 +4,9 @@ plugins {
 }
 
 dependencies {
-    testReportAggregation project(':account-service')
-    testReportAggregation project(':transaction-service')
+    testReportAggregation project(':app-account-service')
+    testReportAggregation project(':app-transaction-service')
+    testReportAggregation project(':lib-common')
 }
 
 reporting {

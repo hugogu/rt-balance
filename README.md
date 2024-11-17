@@ -11,12 +11,12 @@ You may need to refer to
 * Build the docker image. :note: Minikube itself used a separate docker context, so the image needs to be built twice.
     ```bash
     # For docker-compose
-    ./gradlew :account-service:bootBuildImage
-    ./gradlew :transaction-service:bootBuildImage
+    ./gradlew :app-account-service:bootBuildImage
+    ./gradlew :app-transaction-service:bootBuildImage
     # For minikube
     eval $(minikube docker-env)
-    ./gradlew :account-service:bootBuildImage
-    ./gradlew :transaction-service:bootBuildImage
+    ./gradlew :app-account-service:bootBuildImage
+    ./gradlew :app-transaction-service:bootBuildImage
     ```
   
 :warning: The image built is for amd64 architecture, it may not perform well for Mac Apple Silicon Chipset users. Spring Boot 3.4 will provide a native support to it.
@@ -60,8 +60,8 @@ open test-results/build/reports/tests/unit-test/aggregated-results/index.html
 #### Test Reports
 
 * Check latest [Overall Test Reports](https://htmlpreview.github.io/?https://github.com/hugogu/rt-balance/blob/test-results/test-results/build/reports/tests/unit-test/aggregated-results/index.html). 
-* Check [account-service coverage report](https://htmlpreview.github.io/?https://github.com/hugogu/rt-balance/blob/test-results/account-service/build/jacocoHtml/index.html)
-* Check [transaction-service coverage report](https://htmlpreview.github.io/?https://github.com/hugogu/rt-balance/blob/test-results/transaction-service/build/jacocoHtml/index.html)
+* Check [account-service coverage report](https://htmlpreview.github.io/?https://github.com/hugogu/rt-balance/blob/test-results/app-account-service/build/jacocoHtml/index.html)
+* Check [transaction-service coverage report](https://htmlpreview.github.io/?https://github.com/hugogu/rt-balance/blob/test-results/app-transaction-service/build/jacocoHtml/index.html)
 
 :warning: Please note this requires committing reports in `build` to `test-results` branch of this repo.
 

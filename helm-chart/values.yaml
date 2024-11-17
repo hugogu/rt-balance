@@ -9,7 +9,7 @@ redis:
   port: 6379
 
 accountService:
-  image: account-service:0.0.1-SNAPSHOT
+  image: app-account-service:0.0.1-SNAPSHOT
   replicas: 2
   tomcat:
     thread: 8
@@ -28,7 +28,7 @@ accountService:
     targetCPUUtilizationPercentage: 60
 
 transactionService:
-  image: transaction-service:0.0.1-SNAPSHOT
+  image: app-transaction-service:0.0.1-SNAPSHOT
   replicas: 1
   tomcat:
     thread: 4
