@@ -1,7 +1,10 @@
 package io.github.hugogu.balance.account.service
 
-import io.github.hugogu.balance.account.repo.*
-import io.github.hugogu.balance.common.error.AccountNotFoundException
+import io.github.hugogu.balance.account.repo.AccountEntity
+import io.github.hugogu.balance.account.repo.AccountRepo
+import io.github.hugogu.balance.account.repo.ProcessingStatus
+import io.github.hugogu.balance.account.repo.TransactionLogEntity
+import io.github.hugogu.balance.account.repo.TransactionLogRepo
 import io.github.hugogu.balance.common.model.TransactionMessage
 import jakarta.persistence.EntityNotFoundException
 import org.hamcrest.MatcherAssert.assertThat
@@ -10,8 +13,8 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.ArgumentMatchers.eq
-import org.mockito.Mockito.*
 import org.mockito.kotlin.whenever
+import org.mockito.kotlin.any
 import org.springframework.boot.test.mock.mockito.MockBean
 import org.springframework.core.task.SyncTaskExecutor
 import org.springframework.data.redis.core.RedisOperations
@@ -20,7 +23,8 @@ import org.springframework.kafka.core.KafkaOperations
 import org.springframework.test.context.junit.jupiter.SpringExtension
 import java.math.BigDecimal
 import java.time.Duration
-import java.util.*
+import java.util.Optional
+import java.util.UUID
 import java.util.concurrent.CompletableFuture
 import kotlin.test.assertEquals
 
@@ -56,7 +60,13 @@ class AccountServiceUnitTest {
             CompletableFuture.completedFuture(null)
         }
 
-        accountService = AccountService(accountRepo, transactionLog, redisOperations, kafkaOperations, Duration.ofSeconds(10))
+        accountService = AccountService(
+            accountRepo,
+            transactionLog,
+            redisOperations,
+            kafkaOperations,
+            Duration.ofSeconds(10)
+        )
         transactionProcessor = TransactionProcessor(accountService, SyncTaskExecutor())
     }
 
@@ -71,7 +81,8 @@ class AccountServiceUnitTest {
     @Test
     fun queryAccountDetailTest() {
         val accountId = UUID.randomUUID()
-        whenever(accountRepo.findById(eq(accountId))).thenReturn(Optional.of(AccountEntity().apply { setId(accountId) }))
+        whenever(accountRepo.findById(eq(accountId)))
+            .thenReturn(Optional.of(AccountEntity().apply { setId(accountId) }))
 
         val accountEntity = accountService.queryAccountDetail(accountId)
 
@@ -127,7 +138,7 @@ class AccountServiceUnitTest {
         }
         whenever(accountRepo.findById(eq(accountId))).thenReturn(Optional.of(account))
 
-        val updatedAccount = accountService.debitAccount(accountId, BigDecimal.ONE)
+        val updatedAccount = accountService.debitAccount(accountId, BigDecimal.ONE, UUID.randomUUID())
 
         assertEquals(BigDecimal("9"), updatedAccount.balance)
     }
@@ -141,7 +152,7 @@ class AccountServiceUnitTest {
         }
         whenever(accountRepo.findById(eq(accountId))).thenReturn(Optional.of(account))
 
-        val updatedAccount = accountService.creditAccount(accountId, BigDecimal.ONE)
+        val updatedAccount = accountService.creditAccount(accountId, BigDecimal.ONE, UUID.randomUUID())
 
         assertEquals(BigDecimal("11"), updatedAccount.balance)
     }

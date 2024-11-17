@@ -2,7 +2,11 @@ package io.github.hugogu.balance.account.service
 
 import io.github.hugogu.balance.account.config.RedisConfig.Companion.ACCOUNT_DETAIL_CACHE
 import io.github.hugogu.balance.account.config.KafkaConfig
-import io.github.hugogu.balance.account.repo.*
+import io.github.hugogu.balance.account.repo.AccountRepo
+import io.github.hugogu.balance.account.repo.AccountEntity
+import io.github.hugogu.balance.account.repo.ProcessingStatus
+import io.github.hugogu.balance.account.repo.TransactionLogEntity
+import io.github.hugogu.balance.account.repo.TransactionLogRepo
 import io.github.hugogu.balance.common.model.TransactionMessage
 import jakarta.persistence.EntityNotFoundException
 import jakarta.persistence.LockModeType
@@ -13,6 +17,7 @@ import org.springframework.cache.annotation.CacheEvict
 import org.springframework.cache.annotation.Cacheable
 import org.springframework.cache.annotation.Caching
 import org.springframework.dao.CannotAcquireLockException
+import org.springframework.dao.DataAccessException
 import org.springframework.data.jpa.repository.Lock
 import org.springframework.data.redis.core.RedisOperations
 import org.springframework.data.repository.findByIdOrNull
@@ -72,7 +77,7 @@ class AccountService(
     }
 
     fun <T> persistAndProcessTransaction(transaction: TransactionMessage, processor: (TransactionMessage) -> T): T {
-        return processWithLock(transaction.transactionId) {
+        return processWithLock("transaction-lock:${transaction.transactionId}") {
             // In synchronous mode, the transaction log is only recorded for reference, not for further processing.
             // So the status upon insertion is just SUCCEED.
             transactionLogRepo.save(TransactionLogEntity.from(transaction, status = ProcessingStatus.SUCCEED))
@@ -117,13 +122,13 @@ class AccountService(
     @Retryable(include = [CannotAcquireLockException::class])
     @Transactional(isolation = Isolation.REPEATABLE_READ)
     fun loadAndProcessLoggedTransaction(transactionId: UUID): TransactionMessage {
-        return processWithLock(transactionId) {
+        return processWithLock("transaction-lock:${transactionId}") {
             val transaction = transactionLogRepo.findByIdOrNull(transactionId)
                 ?: throw EntityNotFoundException("Transaction $transactionId not found")
             try {
                 processTransaction(transaction.transactionData)
                 transaction.status = ProcessingStatus.SUCCEED
-            } catch (ex: Exception) {
+            } catch (ex: DataAccessException) {
                 log.error("Failed to process transaction $transactionId", ex)
                 transaction.status = ProcessingStatus.FAILED
             }
@@ -131,26 +136,29 @@ class AccountService(
         }
     }
 
-    @Transactional(isolation = Isolation.SERIALIZABLE)
-    fun debitAccount(accountId: UUID, amount: BigDecimal): AccountEntity {
-        val account = accountRepo.findById(accountId).orElseThrow {
-            EntityNotFoundException("Can't find account $accountId")
+    @Transactional(isolation = Isolation.REPEATABLE_READ)
+    fun debitAccount(accountId: UUID, amount: BigDecimal, requestId: UUID): AccountEntity {
+        return processWithLock("request-lock:${requestId}") {
+            val account = accountRepo.findById(accountId).orElseThrow {
+                EntityNotFoundException("Can't find account $accountId")
+            }
+            account.balance -= amount
+            accountRepo.save(account)
         }
-        account.balance -= amount
-        return accountRepo.save(account)
     }
 
-    @Transactional(isolation = Isolation.SERIALIZABLE)
-    fun creditAccount(accountId: UUID, amount: BigDecimal): AccountEntity {
-        val account = accountRepo.findById(accountId).orElseThrow {
-            EntityNotFoundException("Can't find account $accountId")
+    @Transactional(isolation = Isolation.REPEATABLE_READ)
+    fun creditAccount(accountId: UUID, amount: BigDecimal, requestId: UUID): AccountEntity {
+        return processWithLock("request-lock:${requestId}") {
+            val account = accountRepo.findById(accountId).orElseThrow {
+                EntityNotFoundException("Can't find account $accountId")
+            }
+            account.balance += amount
+            accountRepo.save(account)
         }
-        account.balance += amount
-        return accountRepo.save(account)
     }
 
-    private fun <T> processWithLock(transactionId: UUID, action: () -> T): T {
-        val lockKey = "transaction-lock:${transactionId}"
+    private fun <T> processWithLock(lockKey: String, action: () -> T): T {
         val isLocked = valueOperations.setIfAbsent(lockKey, "locked", lockTimeout)
         if (isLocked == true) {
             try {
@@ -159,7 +167,7 @@ class AccountService(
                 valueOperations.getAndDelete(lockKey)
             }
         } else {
-            throw ConcurrentModificationException("Transaction $transactionId is already being processed")
+            throw ConcurrentModificationException("LockKey $lockKey is already being processed")
         }
     }
 

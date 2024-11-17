@@ -10,7 +10,12 @@ import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.transaction.annotation.Transactional
 import org.springframework.validation.annotation.Validated
-import org.springframework.web.bind.annotation.*
+import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.PathVariable
+import org.springframework.web.bind.annotation.PostMapping
+import org.springframework.web.bind.annotation.RequestBody
+import org.springframework.web.bind.annotation.RequestHeader
+import org.springframework.web.bind.annotation.RestController
 import java.util.UUID
 
 @Validated
@@ -55,7 +60,7 @@ class AccountController(
 
     /**
      * This API is used to process the transaction message from the message queue.
-     * The response status is 202 (ACCEPTED) to indicate that the message is accepted and will be processed asynchronously.
+     * The response status 202 (ACCEPTED) to indicate that the message is accepted and will be processed asynchronously.
      *
      * TODO: move it into a standalone service for better separation of concerns.
      */
@@ -100,7 +105,7 @@ class AccountController(
          */
         @RequestHeader("X-Request-ID") requestId: UUID,
     ): AccountDetail {
-        val entity = accountService.debitAccount(id, request.amount)
+        val entity = accountService.debitAccount(id, request.amount, requestId)
 
         return AccountDetail.from(entity)
     }
@@ -114,7 +119,7 @@ class AccountController(
          */
         @RequestHeader("X-Request-ID") requestId: UUID,
     ): AccountDetail {
-        val entity = accountService.creditAccount(id, request.amount)
+        val entity = accountService.creditAccount(id, request.amount, requestId)
 
         return AccountDetail.from(entity)
     }

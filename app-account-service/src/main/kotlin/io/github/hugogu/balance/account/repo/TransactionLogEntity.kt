@@ -3,7 +3,11 @@ package io.github.hugogu.balance.account.repo
 import io.github.hugogu.balance.common.EntityBase
 import io.github.hugogu.balance.common.model.TransactionMessage
 import io.hypersistence.utils.hibernate.type.json.JsonBinaryType
-import jakarta.persistence.*
+import jakarta.persistence.Column
+import jakarta.persistence.Entity
+import jakarta.persistence.EnumType
+import jakarta.persistence.Enumerated
+import jakarta.persistence.Table
 import org.hibernate.annotations.Type
 import org.springframework.data.annotation.LastModifiedDate
 import org.springframework.data.annotation.Version
@@ -27,7 +31,10 @@ class TransactionLogEntity : EntityBase() {
     var version: Int = 0
 
     companion object {
-        fun from(transaction: TransactionMessage, status: ProcessingStatus = ProcessingStatus.INIT): TransactionLogEntity {
+        fun from(
+            transaction: TransactionMessage,
+            status: ProcessingStatus = ProcessingStatus.INIT
+        ): TransactionLogEntity {
             return TransactionLogEntity().apply {
                 this.setId(transaction.transactionId)
                 this.transactionData = transaction

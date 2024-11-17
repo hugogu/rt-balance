@@ -2,13 +2,17 @@ package io.github.hugogu.balance.transaction.repo
 
 import com.fasterxml.jackson.annotation.JsonIgnore
 import io.github.hugogu.balance.common.EntityBase
-import jakarta.persistence.*
+import jakarta.persistence.Column
+import jakarta.persistence.Entity
+import jakarta.persistence.EnumType
+import jakarta.persistence.Enumerated
+import jakarta.persistence.Table
 import org.javamoney.moneta.FastMoney
 import org.springframework.data.annotation.LastModifiedDate
 import org.springframework.data.annotation.Version
 import java.math.BigDecimal
 import java.time.Instant
-import java.util.*
+import java.util.UUID
 import javax.money.MonetaryAmount
 
 

@@ -18,7 +18,11 @@ class TransactionController(
         @RequestBody request: TransferRequest,
         @RequestHeader("X-Request-ID", required = false) requestId: UUID? = null,
     ) : TransferIdentity {
-        val transaction = transactionService.transfer(requestId ?: UUID.randomUUID(), request.from, request.to, request.amount)
+        val transaction = transactionService.transfer(
+            requestId ?: UUID.randomUUID(),
+            request.from, request.to,
+            request.amount
+        )
         transactionService.processTransactionAsync(transaction.id!!)
 
         return TransferIdentity(transaction.id!!)

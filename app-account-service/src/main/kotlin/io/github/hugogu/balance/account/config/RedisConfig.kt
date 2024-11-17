@@ -31,12 +31,13 @@ class RedisConfig {
         return RedisCacheManagerBuilderCustomizer {
             it.withCacheConfiguration(
                 ACCOUNT_DETAIL_CACHE,
-                cacheConfig.entryTtl(Duration.ofMinutes(60))
+                cacheConfig.entryTtl(CACHE_TTL)
             )
         }
     }
 
     companion object {
         const val ACCOUNT_DETAIL_CACHE = "accountDetails"
+        private val CACHE_TTL = Duration.ofMinutes(60)
     }
 }

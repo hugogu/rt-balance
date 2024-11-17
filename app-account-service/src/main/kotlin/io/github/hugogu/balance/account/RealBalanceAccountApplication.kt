@@ -12,8 +12,8 @@ import org.springframework.transaction.annotation.EnableTransactionManagement
 @EnableJpaAuditing
 @EnableTransactionManagement
 @SpringBootApplication(scanBasePackages = ["io.github.hugogu.balance"])
-class RealBalanceApplication
+class RealBalanceAccountApplication
 
 fun main(args: Array<String>) {
-    runApplication<RealBalanceApplication>(*args)
+    runApplication<RealBalanceAccountApplication>(*args)
 }

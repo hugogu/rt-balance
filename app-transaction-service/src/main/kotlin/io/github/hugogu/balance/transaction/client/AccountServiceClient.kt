@@ -3,7 +3,11 @@ package io.github.hugogu.balance.transaction.client
 import io.github.hugogu.balance.common.model.TransactionMessage
 import org.springframework.cloud.openfeign.FeignClient
 import org.springframework.retry.annotation.Retryable
-import org.springframework.web.bind.annotation.*
+import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.PathVariable
+import org.springframework.web.bind.annotation.PostMapping
+import org.springframework.web.bind.annotation.RequestBody
+import org.springframework.web.bind.annotation.RequestHeader
 import java.math.BigDecimal
 import java.util.*
 

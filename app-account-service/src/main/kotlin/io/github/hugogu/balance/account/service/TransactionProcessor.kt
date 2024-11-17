@@ -40,7 +40,7 @@ class TransactionProcessor(
          * The processing logic need to handle the out-of-order messages in processing.
          *
          * TODO: 1. A thread affinity strategy base on fromAccount/toAccount may help locality of processing.
-         *       2. A windowed message queue that orders messages by timestamp may help to reduce the out-of-order messages.
+         *       2. A time window that orders messages by timestamp may help to reduce the out-of-order messages.
          */
         concurrency = "1"
     )

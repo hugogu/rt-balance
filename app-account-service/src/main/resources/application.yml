@@ -63,6 +63,12 @@ service:
   lock:
     timeout: 10s
 
+kafka:
+  topics:
+    pending-transaction:
+      partitions: 16
+      replicas: 1
+
 management:
   endpoints:
     web:

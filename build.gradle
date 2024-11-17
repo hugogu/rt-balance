@@ -63,6 +63,14 @@ subprojects {
         }
     }
 
+    configurations.configureEach {
+        resolutionStrategy.eachDependency {
+            if (requested.group == "org.jetbrains.kotlin") {
+                useVersion("2.0.10")
+            }
+        }
+    }
+
     dependencies {
         implementation 'com.fasterxml.jackson.module:jackson-module-kotlin'
         implementation 'org.springframework.boot:spring-boot-starter-actuator'

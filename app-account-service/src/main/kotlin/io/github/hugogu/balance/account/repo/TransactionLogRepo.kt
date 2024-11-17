@@ -5,5 +5,4 @@ import org.springframework.stereotype.Repository
 import java.util.UUID
 
 @Repository
-interface TransactionLogRepo : JpaRepository<TransactionLogEntity, UUID> {
-}
+interface TransactionLogRepo : JpaRepository<TransactionLogEntity, UUID>

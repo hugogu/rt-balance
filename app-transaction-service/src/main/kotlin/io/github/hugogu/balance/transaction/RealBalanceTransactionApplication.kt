@@ -8,8 +8,7 @@ import org.springframework.retry.annotation.EnableRetry
 @EnableRetry
 @EnableFeignClients
 @SpringBootApplication(scanBasePackages = ["io.github.hugogu.balance"])
-class RealBalanceTransactionApplication {
-}
+class RealBalanceTransactionApplication
 
 fun main(args: Array<String>) {
     runApplication<RealBalanceTransactionApplication>(*args)

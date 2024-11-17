@@ -2,7 +2,9 @@ package io.github.hugogu.balance.account.repo
 
 import io.github.hugogu.balance.common.EntityBase
 import io.github.hugogu.balance.common.model.AccountStatus
-import jakarta.persistence.*
+import jakarta.persistence.Column
+import jakarta.persistence.Entity
+import jakarta.persistence.Table
 import org.springframework.data.annotation.LastModifiedDate
 import org.springframework.data.annotation.Version
 import java.math.BigDecimal
@@ -20,9 +22,10 @@ class AccountEntity : EntityBase() {
     var accountCcy: String = ""
 
     /**
-     * FIXME: weather to store a balance at account entity is one of the most critical design decision in the whole project.
+     * Weather to store a balance at account entity is one of the most critical design decision in the whole project.
      *
-     * Here we assuming the balance is often used in many different places and scenarios, so we store it in the account entity for the sake of performance.
+     * Here we assume the balance is often used in many different places and scenarios,
+     * so we store it in the account entity for the sake of performance.
      * But it also brings some problems, such as the consistency between account and transaction service.
      */
     var balance: BigDecimal = BigDecimal.ZERO

@@ -8,13 +8,14 @@ import io.github.hugogu.balance.transaction.repo.TransactionRepo
 import io.github.hugogu.balance.transaction.repo.TransactionStatus
 import io.github.hugogu.balance.transaction.service.error.TransactionBusinessError
 import io.github.hugogu.balance.transaction.service.error.TransactionNotFoundException
+import org.slf4j.LoggerFactory
+import org.springframework.dao.DataAccessException
 import org.springframework.scheduling.annotation.Async
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.math.BigDecimal
 import java.time.Instant
-import java.util.*
-
+import java.util.UUID
 
 @Service
 class TransactionService(
@@ -43,7 +44,7 @@ class TransactionService(
     /**
      * The workflow saga of the transaction processing.
      * Driven by the transaction status.
-     * TODO: separate Saga status from transaction status by using temporal.io or other workflow engine if performance is acceptable.
+     * TODO: separate Saga status from transaction status by using temporal.io or other workflow engine
      * Another option is to introduce a messaging broker between transaction and account service.
      */
     @Async
@@ -57,7 +58,8 @@ class TransactionService(
                 try {
                     accountServiceClient.processTransactionWithRetry(transactionMessage)
                     transactionRepo.updateTransactionStatus(transactionId, TransactionStatus.COMPLETED)
-                } catch (e: Exception) {
+                } catch (e: DataAccessException) {
+                    log.error("Failed to process transaction", e)
                     transactionRepo.updateTransactionStatus(transactionId, TransactionStatus.FAILED)
                 }
             }
@@ -68,6 +70,8 @@ class TransactionService(
     }
 
     companion object {
+        private val log = LoggerFactory.getLogger(TransactionService::class.java)
+
         fun buildMessage(transaction: TransactionEntity): TransactionMessage {
             return TransactionMessage(
                 transaction.id!!,
