@@ -34,4 +34,10 @@
 * Commit message should follow [conventional commits](https://www.conventionalcommits.org/en/v1.0.0/)
 * [Github pipeline](https://github.com/hugogu/rt-balance/actions) MUST success before merging.
 
+## Roadmap items to be built
+
+* A frontend portal to view & make transactions.
+* Use of [Spring Cloud Gateway](https://spring.io/projects/spring-cloud-gateway) to manage API gateway with Authentication & Authorization.
+* Use of [Spring Cloud Config](https://spring.io/projects/spring-cloud-config) to manage configurations.
+* Replace JSON APIs with [gRPC](https://grpc.io/) with protobuf.
 

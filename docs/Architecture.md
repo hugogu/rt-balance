@@ -6,6 +6,16 @@ The deployment architecture of the Real-Time Balance application is shown in the
 
 ![img.png](img/HelmDeployment.png)
 
+## Service Top Level Modeling
+
+There are two services in the system, account-service and transaction-service.
+Their role and responsibility are shown in the following diagram.
+
+![img.png](img/ServiceModel.png)
+
+The `Account` service is the target service this demo project is focusing on. 
+The `Transaction` service in this project is more like a client of the `Account` service, it sends requests to the `Account` service to process transactions.
+
 ## Key Architecture Decisions Records
 
 There are severa key questions to be answers before we come to a rational decision on this realtime balance calculation system.
@@ -99,3 +109,9 @@ The following diagram may illustrate the differences between the two approaches.
 
 ![img.png](img/InboxVsBroker.png)
 
+### HTTP API vs RPCs
+
+HTTP API and RPCs are two common ways to communicate between services.
+For performance critical scenarios, RPCs are usually preferred. 
+
+HTTP API with JSON format is used in this sample project for simplicity and readability.

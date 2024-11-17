@@ -70,3 +70,7 @@ Pod anti-affinity is set to `required` for the account-service and transaction-s
 So that the pods are not scheduled on the same node.
 
 It only works if there are multiple nodes in the cluster.
+
+## To-Dos
+
+* Split helm-chart into two charts for app service & shared infrastructure respectively.

@@ -15,3 +15,4 @@
 ## Key References
 
 * [Kubernetes Metrics Server](https://github.com/kubernetes-sigs/metrics-server/tree/master/charts/metrics-server)
+* [Ingress-Nginx](https://kubernetes.github.io/ingress-nginx/user-guide/nginx-configuration/)

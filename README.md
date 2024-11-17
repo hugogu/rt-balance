@@ -4,7 +4,17 @@ You may need to refer to
 * [Development Environment](./docs/DevelopmentEnvironment.md) for setting up the local environment.
 * [Architecture Document](docs/Architecture.md) to get to know the overall architecture and key tradeoffs made.
 
-## Build
+## Project Structure
+
+* **app-account-service**: Account Service Module, the core service module of this project.
+* **app-transaction-service**: Transaction Service Module, a sample client of the Account Service.
+* **helm-chart**: Helm Chart for deploying the services into Kubernetes.
+* **docs**: Documentation for the project.
+* **test-results**: An empty module used to aggregate Test reports of all submodules.
+* **load-testing**: Load test toolset and scripts and also used to generate mock data.
+* **lib-common**: Common library shared by all services.
+
+## How to Build
 
 :warning: **Having docker & minikube running is a prerequisite for building the docker image.**
 
@@ -21,7 +31,7 @@ You may need to refer to
   
 :warning: The image built is for amd64 architecture, it may not perform well for Mac Apple Silicon Chipset users. Spring Boot 3.4 will provide a native support to it.
 
-## Deploy
+## How to Deploy
 
 ### Helm Chart Deployment
 
@@ -35,7 +45,7 @@ Having images get built successfully. You can bring up services by running.
 docker-compose up -d account-service-api transaction-service-api
 ```
 
-## Test
+## How to Test
 
 ### Unit Test & Integration Test
 
@@ -57,6 +67,15 @@ open test-results/build/reports/tests/unit-test/aggregated-results/index.html
 ./gradlew :app-transaction-service:test jacocoTestReport testAggregateTestReport -DincludeTags=require-account,integration
 ```
 
-#### Test Reports
+### Test Reports
 
 Refer to the [docs folder](./docs/README.md) for test reports.
+
+## Special Branches
+
+There are several special branches in this repo for special use.
+
+* **test-results**: Branch to store test results generated during build and make it accessible directly in GitHub without build.
+* **chaos-monkey**: Branch to with chaos monkey framework integrated. The build made here shouldn't be used in production. 
+
+They should be removed when there is more appropriate way to make them.
