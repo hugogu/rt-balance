@@ -32,6 +32,8 @@ spec:
             - containerPort: 9010
           # QoS should be set to Guaranteed to ensure that the pod has the resources it requests.
           # And it is also a performance benchmark baseline.
+          # The resource setting is verified to be stable in k8s environment.
+          # Trying to reduce the resource allocation may cause unstable performance.
           resources:
             requests:
               memory: "2048Mi"
@@ -48,6 +50,8 @@ spec:
               value: {{ .Values.accountService.db.user }}
             - name: SPRING_DATASOURCE_PASSWORD
               value: {{ .Values.accountService.db.password }}
+            - name: SPRING_DATASOURCE_HIKARI_CONNECTION_TIMEOUT
+              value: "{{ .Values.accountService.db.connectionTimeout }}"
             - name: SPRING_KAFKA_BOOTSTRAP_SERVERS
               value: {{ .Values.accountService.kafka.bootstrapServers }}
             - name: SERVER_TOMCAT_THREADS_MAX

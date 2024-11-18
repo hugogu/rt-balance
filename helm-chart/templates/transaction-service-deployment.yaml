@@ -38,6 +38,8 @@ spec:
               value: {{ .Values.transactionService.db.user }}
             - name: SPRING_DATASOURCE_PASSWORD
               value: {{ .Values.transactionService.db.password }}
+            - name: SPRING_DATASOURCE_HIKARI_CONNECTION_TIMEOUT
+              value: "{{ .Values.transactionService.db.connectionTimeout }}"
             - name: ACCOUNT_SERVICE_URL
               value: {{ .Values.transactionService.accountService.url }}
             - name: BPL_JVM_THREAD_COUNT

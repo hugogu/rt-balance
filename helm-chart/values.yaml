@@ -19,6 +19,7 @@ accountService:
     host: account-db
     user: postgres
     password: postgres
+    connectionTimeout: 2000
   redis:
     host: redis
   kafka:
@@ -26,7 +27,7 @@ accountService:
   hpa:
     enabled: true
     minReplicas: 1
-    maxReplicas: 4
+    maxReplicas: 3
     targetCPUUtilizationPercentage: 60
 
 transactionService:
@@ -40,6 +41,7 @@ transactionService:
     host: transaction-db
     user: postgres
     password: postgres
+    connectionTimeout: 2000
   hpa:
     enabled: true
     minReplicas: 1

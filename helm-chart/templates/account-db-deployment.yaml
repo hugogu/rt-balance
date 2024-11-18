@@ -24,6 +24,13 @@ spec:
               value: {{ .Values.postgres.accountDb.user }}
             - name: POSTGRES_PASSWORD
               value: {{ .Values.postgres.accountDb.password }}
+          volumeMounts:
+            - name: account-db-storage
+              mountPath: /var/lib/postgresql/data
+      volumes:
+        - name: account-db-storage
+          persistentVolumeClaim:
+            claimName: account-db-pvc
 ---
 apiVersion: v1
 kind: Service
@@ -38,3 +45,14 @@ spec:
       port: 5432
       targetPort: 5432
       nodePort: 30007
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: account-db-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi

@@ -16,14 +16,15 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.cache.annotation.CacheEvict
 import org.springframework.cache.annotation.Cacheable
 import org.springframework.cache.annotation.Caching
-import org.springframework.dao.CannotAcquireLockException
-import org.springframework.dao.DataAccessException
+import org.springframework.dao.NonTransientDataAccessException
+import org.springframework.dao.TransientDataAccessException
 import org.springframework.data.jpa.repository.Lock
 import org.springframework.data.redis.core.RedisOperations
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.kafka.core.KafkaOperations
 import org.springframework.retry.annotation.Retryable
 import org.springframework.stereotype.Service
+import org.springframework.transaction.TransactionException
 import org.springframework.transaction.annotation.Isolation
 import org.springframework.transaction.annotation.Transactional
 import org.springframework.validation.annotation.Validated
@@ -98,7 +99,7 @@ class AccountService(
         ]
     )
     @Lock(LockModeType.PESSIMISTIC_WRITE)
-    @Retryable(include = [CannotAcquireLockException::class])
+    @Retryable(include = [TransientDataAccessException::class, TransactionException::class])
     @Transactional(isolation = Isolation.REPEATABLE_READ)
     fun processTransaction(@Valid transaction: TransactionMessage): AccountPair {
         val accounts = accountRepo.findAllById(listOf(transaction.fromAccount, transaction.toAccount))
@@ -125,7 +126,7 @@ class AccountService(
         ]
     )
     @Lock(LockModeType.PESSIMISTIC_WRITE)
-    @Retryable(include = [CannotAcquireLockException::class])
+    @Retryable(include = [TransientDataAccessException::class, TransactionException::class])
     @Transactional(isolation = Isolation.REPEATABLE_READ)
     fun loadAndProcessLoggedTransaction(transactionId: UUID): TransactionMessage {
         return processWithLock("transaction-lock:${transactionId}") {
@@ -134,7 +135,7 @@ class AccountService(
             try {
                 processTransaction(transaction.transactionData)
                 transaction.status = ProcessingStatus.SUCCEED
-            } catch (ex: DataAccessException) {
+            } catch (ex: NonTransientDataAccessException) {
                 log.error("Failed to process transaction $transactionId", ex)
                 transaction.status = ProcessingStatus.FAILED
             }
