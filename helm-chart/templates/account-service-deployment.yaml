@@ -52,6 +52,8 @@ spec:
               value: {{ .Values.accountService.kafka.bootstrapServers }}
             - name: SERVER_TOMCAT_THREADS_MAX
               value: "{{ .Values.accountService.tomcat.thread }}"
+            - name: BPL_JVM_THREAD_COUNT
+              value: "{{ .Values.accountService.jvm.thread }}"
             # Allow remote debugging & profiling from local.
             - name: JAVA_OPTS
               value: "-Dcom.sun.management.jmxremote \

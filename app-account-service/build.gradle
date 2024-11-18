@@ -18,7 +18,8 @@ dependencies {
 bootBuildImage {
     createdDate = "now"
     environment = [
-            "BP_JVM_VERSION": "17"
+            "BP_JVM_VERSION": "17",
+            "BPL_JVM_THREAD_COUNT": "100"
     ]
 }
 

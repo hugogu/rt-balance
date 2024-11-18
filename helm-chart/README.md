@@ -31,7 +31,7 @@ Once deployed successfully, your dashboard should show something like this:
 
 * Upgrade if case of any helm update
 ```bash
-helm upgrade test ./helm-chart/ -f ./helm-chart/values.yaml -n default
+helm upgrade test ./helm-chart/ -f ./helm-chart/values.yaml --recreate-pods -n default
 ```
 * Tear down
 ```bash

@@ -40,6 +40,8 @@ spec:
               value: {{ .Values.transactionService.db.password }}
             - name: ACCOUNT_SERVICE_URL
               value: {{ .Values.transactionService.accountService.url }}
+            - name: BPL_JVM_THREAD_COUNT
+              value: "{{ .Values.transactionService.jvm.thread }}"
           livenessProbe: {{ toYaml .Values.probes.liveness | nindent 12 }}
           readinessProbe: {{ toYaml .Values.probes.readiness | nindent 12 }}
 ---

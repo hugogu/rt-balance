@@ -13,6 +13,8 @@ accountService:
   replicas: 2
   tomcat:
     thread: 8
+  jvm:
+    thread: 100
   db:
     host: account-db
     user: postgres
@@ -23,7 +25,7 @@ accountService:
     bootstrapServers: kafka:9092
   hpa:
     enabled: true
-    minReplicas: 2
+    minReplicas: 1
     maxReplicas: 4
     targetCPUUtilizationPercentage: 60
 
@@ -32,6 +34,8 @@ transactionService:
   replicas: 1
   tomcat:
     thread: 4
+  jvm:
+    thread: 100
   db:
     host: transaction-db
     user: postgres
