@@ -34,6 +34,8 @@ spec:
               value: "8080"
             - name: DB_HOST
               value: {{ .Values.transactionService.db.host }}
+            - name: DB_NAME
+              value: {{ .Values.postgres.transactionDb.name }}
             - name: SPRING_DATASOURCE_USERNAME
               value: {{ .Values.transactionService.db.user }}
             - name: SPRING_DATASOURCE_PASSWORD

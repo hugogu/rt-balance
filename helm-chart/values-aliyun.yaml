@@ -16,9 +16,9 @@ accountService:
   jvm:
     thread: 100
   db:
-    host: account-db
-    user: postgres
-    password: postgres
+    host: <id>.pg.rds.aliyuncs.com
+    user: <user>
+    password:
     connectionTimeout: 2000
   redis:
     host: redis
@@ -38,9 +38,9 @@ transactionService:
   jvm:
     thread: 100
   db:
-    host: transaction-db
-    user: postgres
-    password: postgres
+    host: <id>.pg.rds.aliyuncs.com
+    user: <user>
+    password:
     connectionTimeout: 2000
   hpa:
     enabled: true
@@ -53,15 +53,11 @@ transactionService:
 postgres:
   image: postgres:17-alpine
   accountDb:
-    enabled: true
+    enabled: false
     name: account
-    user: postgres
-    password: postgres
   transactionDb:
-    enabled: true
-    name: transaction
-    user: postgres
-    password: postgres
+    enabled: false
+    name: trans
 
 kafka:
   enabled: true

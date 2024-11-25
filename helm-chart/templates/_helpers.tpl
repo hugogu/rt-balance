@@ -14,3 +14,10 @@
 {{- include "ingress-deployment.yaml" . }}
 {{- end }}
 
+{{- if .Values.postgres.accountDb.enabled }}
+{{- include "account-db-deployement.yaml"}}
+{{- end}}
+
+{{- if .Values.postgres.transactionDb.enabled }}
+{{- include "transaction-db-deployement.yaml"}}
+{{- end}}

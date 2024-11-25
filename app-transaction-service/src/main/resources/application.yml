@@ -6,7 +6,7 @@ spring:
     name: real-balance-transaction
 
   datasource:
-    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/transaction
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:transaction}
     username: postgres
     password: postgres
   jpa:

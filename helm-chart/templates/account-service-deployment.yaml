@@ -44,6 +44,8 @@ spec:
           env:
             - name: DB_HOST
               value: {{ .Values.accountService.db.host }}
+            - name: DB_NAME
+              value: {{ .Values.postgres.accountDb.name }}
             - name: SPRING_DATA_REDIS_HOST
               value: {{ .Values.accountService.redis.host }}
             - name: SPRING_DATASOURCE_USERNAME
