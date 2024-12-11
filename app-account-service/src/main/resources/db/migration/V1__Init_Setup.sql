@@ -11,9 +11,9 @@ CREATE TABLE IF NOT EXISTS account
     version        integer       NOT NULL DEFAULT 0
 );
 
-CREATE INDEX idx_account_account_num ON account (account_num);
-CREATE INDEX idx_account_create_time ON account USING BRIN(create_time);
-CREATE INDEX idx_account_last_update ON account USING BRIN(create_time);
+CREATE INDEX IF NOT EXISTS idx_account_account_num ON account (account_num);
+CREATE INDEX IF NOT EXISTS idx_account_create_time ON account USING BRIN(create_time);
+CREATE INDEX IF NOT EXISTS idx_account_last_update ON account USING BRIN(last_update);
 
 CREATE TABLE IF NOT EXISTS transaction_log
 (
@@ -25,4 +25,4 @@ CREATE TABLE IF NOT EXISTS transaction_log
     version          integer     NOT NULL DEFAULT 0
 ) WITH(FILLFACTOR=85);
 
-CREATE INDEX idx_txn_log_create_time ON transaction_log USING BRIN(create_time);
+CREATE INDEX IF NOT EXISTS idx_txn_log_create_time ON transaction_log USING BRIN(create_time);

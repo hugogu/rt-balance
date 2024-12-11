@@ -41,9 +41,10 @@ spring:
     consumer:
       group-id: ${spring.application.name}
       auto-offset-reset: earliest
-      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.DelegatingByTopicDeserializer
       properties:
         spring.json.trusted.packages: "io.github.hugogu.*"
+        spring.kafka.value.serialization.bytopic.config: "changes.account.public.transaction_log.*:io.github.hugogu.balance.account.message.TransactionLogChangeEventDeserializer,pending-transaction.*:org.springframework.kafka.support.serializer.JsonDeserializer"
       max-poll-records: 20
       # According to the nature of transaction message received from API.
       # There are lock and idempotent check in the service layer.

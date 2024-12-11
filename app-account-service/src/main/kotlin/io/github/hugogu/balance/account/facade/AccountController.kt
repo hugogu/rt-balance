@@ -3,9 +3,6 @@ package io.github.hugogu.balance.account.facade
 import io.github.hugogu.balance.account.service.AccountService
 import io.github.hugogu.balance.common.model.TransactionMessage
 import jakarta.validation.Valid
-import org.springframework.beans.factory.annotation.Qualifier
-import org.springframework.boot.autoconfigure.task.TaskExecutionAutoConfiguration.APPLICATION_TASK_EXECUTOR_BEAN_NAME
-import org.springframework.core.task.AsyncTaskExecutor
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.transaction.annotation.Transactional
@@ -21,9 +18,7 @@ import java.util.UUID
 @Validated
 @RestController("/account")
 class AccountController(
-    private val accountService: AccountService,
-    @Qualifier(APPLICATION_TASK_EXECUTOR_BEAN_NAME)
-    private val asyncExecutor: AsyncTaskExecutor,
+    private val accountService: AccountService
 ) {
     @PostMapping("/account")
     @Transactional
@@ -72,6 +67,7 @@ class AccountController(
      */
     @PostMapping("/account:transfer/message")
     fun postTransactionMessage(@Valid @RequestBody transaction: TransactionMessage): ResponseEntity<Void> {
+        // Only send to Kafka, then the message will be processed asynchronously.
         accountService.postTransactionMessageToBroker(transaction)
 
         return ResponseEntity.status(HttpStatus.ACCEPTED).build()
@@ -87,14 +83,19 @@ class AccountController(
      * This API is only implemented for demonstration & performance comparison purposes.
      *
      * The benchmark shows this api is 15% slower than the synchronous version with optimal thread pool settings.
+     *
+     * The transaction will be captured by debezium postgres connector into Kafka.
+     * And then the kafka message will be processed by TransactionProcessor.
+     *
+     * @see io.github.hugogu.balance.account.service.TransactionProcessor.onTransactionLogCreated
+     *
+     * TODO: the processing logic could & should be moved to a standalone service for better separation of concerns.
      */
     @Deprecated("This API is only implemented for demonstration & performance comparison purposes.")
     @PostMapping("/account:transfer/async")
     fun processTransactionAsync(@Valid @RequestBody transaction: TransactionMessage): ResponseEntity<Void> {
-        val entity = accountService.persistPendingTransactionMessage(transaction)
-        asyncExecutor.submit {
-            accountService.loadAndProcessLoggedTransaction(entity.id!!)
-        }
+        // Only save into database, then Debezium will capture the change and send it to Kafka.
+        accountService.persistPendingTransactionMessage(transaction)
 
         return ResponseEntity.status(HttpStatus.ACCEPTED).build()
     }

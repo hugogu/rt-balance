@@ -45,6 +45,10 @@ Having images get built successfully. You can bring up services by running.
 docker-compose up -d account-service-api transaction-service-api
 ```
 
+## How to config
+
+Refer to the [Development Notes](./docs/DevelopmentNotes.md) for more details.
+
 ## How to Test
 
 ### Unit Test & Integration Test

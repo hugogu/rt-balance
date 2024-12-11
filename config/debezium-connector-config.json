@@ -1,0 +1,21 @@
+{
+  "name": "account-changes-connector",
+  "config": {
+    "connector.class": "io.debezium.connector.postgresql.PostgresConnector",
+    "tasks.max": "1",
+    "database.hostname": "postgres",
+    "database.port": "5432",
+    "database.user": "postgres",
+    "database.password": "postgres",
+    "database.dbname": "account",
+    "database.server.name": "database.acct",
+    "plugin.name": "pgoutput",
+    "slot.name": "debezium",
+    "publication.name": "account_changes",
+    "topic.prefix": "changes.account",
+    "key.converter": "org.apache.kafka.connect.json.JsonConverter",
+    "value.converter": "org.apache.kafka.connect.json.JsonConverter",
+    "key.converter.schemas.enable": "false",
+    "value.converter.schemas.enable": "false"
+  }
+}

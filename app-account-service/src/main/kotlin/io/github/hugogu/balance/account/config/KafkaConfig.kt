@@ -27,6 +27,7 @@ class KafkaConfig(
 
     companion object {
         const val PENDING_TRANSACTION_TOPIC = "pending-transaction"
+        const val DEBEZIUM_TRANSACTION_LOG_TOPIC = "changes.account.public.transaction_log"
     }
 }
 
