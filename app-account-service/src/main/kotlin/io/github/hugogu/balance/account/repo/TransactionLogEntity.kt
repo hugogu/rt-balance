@@ -1,6 +1,8 @@
 package io.github.hugogu.balance.account.repo
 
 import io.github.hugogu.balance.common.EntityBase
+import io.github.hugogu.balance.common.event.TransactionProcessStatus
+import io.github.hugogu.balance.common.event.TransactionProcessedEvent
 import io.github.hugogu.balance.common.model.TransactionMessage
 import io.hypersistence.utils.hibernate.type.json.JsonBinaryType
 import jakarta.persistence.Column
@@ -41,5 +43,16 @@ class TransactionLogEntity : EntityBase() {
                 this.status = status
             }
         }
+    }
+
+    fun toEvent(): TransactionProcessedEvent {
+        return TransactionProcessedEvent(
+            transactionId = id!!,
+            result = when (status) {
+                ProcessingStatus.SUCCEED -> TransactionProcessStatus.COMPLETED
+                ProcessingStatus.FAILED -> TransactionProcessStatus.FAILED
+                ProcessingStatus.INIT -> TransactionProcessStatus.ACCEPTED
+            }
+        )
     }
 }

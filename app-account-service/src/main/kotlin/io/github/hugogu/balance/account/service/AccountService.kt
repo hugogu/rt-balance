@@ -1,27 +1,29 @@
 package io.github.hugogu.balance.account.service
 
 import io.github.hugogu.balance.account.config.RedisConfig.Companion.ACCOUNT_DETAIL_CACHE
-import io.github.hugogu.balance.account.config.KafkaConfig
-import io.github.hugogu.balance.account.repo.AccountRepo
 import io.github.hugogu.balance.account.repo.AccountEntity
+import io.github.hugogu.balance.account.repo.AccountRepo
 import io.github.hugogu.balance.account.repo.ProcessingStatus
 import io.github.hugogu.balance.account.repo.TransactionLogEntity
 import io.github.hugogu.balance.account.repo.TransactionLogRepo
+import io.github.hugogu.balance.common.event.TransactionProcessStatus
+import io.github.hugogu.balance.common.event.TransactionProcessedEvent
 import io.github.hugogu.balance.common.model.TransactionMessage
 import jakarta.persistence.EntityNotFoundException
 import jakarta.persistence.LockModeType
+import jakarta.persistence.PersistenceException
 import jakarta.validation.Valid
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.cache.annotation.CacheEvict
 import org.springframework.cache.annotation.Cacheable
 import org.springframework.cache.annotation.Caching
+import org.springframework.context.ApplicationEventPublisher
 import org.springframework.dao.NonTransientDataAccessException
 import org.springframework.dao.TransientDataAccessException
 import org.springframework.data.jpa.repository.Lock
 import org.springframework.data.redis.core.RedisOperations
 import org.springframework.data.repository.findByIdOrNull
-import org.springframework.kafka.core.KafkaOperations
 import org.springframework.retry.annotation.Retryable
 import org.springframework.stereotype.Service
 import org.springframework.transaction.TransactionException
@@ -31,7 +33,6 @@ import org.springframework.validation.annotation.Validated
 import java.math.BigDecimal
 import java.time.Duration
 import java.util.UUID
-import kotlin.ConcurrentModificationException
 
 typealias AccountPair = Pair<AccountEntity, AccountEntity>
 
@@ -41,7 +42,7 @@ class AccountService(
     private val accountRepo: AccountRepo,
     private val transactionLogRepo: TransactionLogRepo,
     redisOperations: RedisOperations<String, String>,
-    private val kafkaOperations: KafkaOperations<String, TransactionMessage>,
+    private val eventPublisher: ApplicationEventPublisher,
     @Value("\${service.lock.timeout}") private val lockTimeout: Duration
 ) {
     private val valueOperations = redisOperations.opsForValue()
@@ -76,19 +77,28 @@ class AccountService(
      */
     @Retryable
     fun postTransactionMessageToBroker(@Valid transaction: TransactionMessage) {
-        kafkaOperations.send(KafkaConfig.PENDING_TRANSACTION_TOPIC, transaction.transactionId.toString(), transaction)
-            .exceptionally {
-                log.error("Failed to send transaction message to broker", it)
-                null
-            }
+        eventPublisher.publishEvent(transaction)
     }
 
+    @Transactional
     fun <T> persistAndProcessTransaction(transaction: TransactionMessage, processor: (TransactionMessage) -> T): T {
         return processWithLock("transaction-lock:${transaction.transactionId}") {
             // In synchronous mode, the transaction log is only recorded for reference, not for further processing.
             // So the status upon insertion is just SUCCEED.
-            transactionLogRepo.save(TransactionLogEntity.from(transaction, status = ProcessingStatus.SUCCEED))
-            processor(transaction)
+            try {
+                transactionLogRepo.save(TransactionLogEntity.from(transaction, status = ProcessingStatus.SUCCEED))
+                val result = processor(transaction)
+                eventPublisher.publishEvent(TransactionProcessedEvent(transaction.transactionId))
+                result
+            } catch (ex: PersistenceException) {
+                val event = TransactionProcessedEvent(
+                    transaction.transactionId,
+                    TransactionProcessStatus.FAILED,
+                    ex.message.orEmpty()
+                )
+                eventPublisher.publishEvent(event)
+                throw ex
+            }
         }
     }
 
@@ -138,6 +148,8 @@ class AccountService(
             } catch (ex: NonTransientDataAccessException) {
                 log.error("Failed to process transaction $transactionId", ex)
                 transaction.status = ProcessingStatus.FAILED
+            } finally {
+                eventPublisher.publishEvent(transaction.toEvent())
             }
             transaction.transactionData
         }

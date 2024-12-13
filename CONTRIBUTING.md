@@ -20,6 +20,17 @@
 
 ## Development Requirement
 
+### Kafka Topic Naming Convention
+
+* Topic name should be in the format of `{type}-{aggregation}-{purpose/usage}`. Known types are:
+  * `events`: Event published out for other services to consume.
+  * `commands`: Command message received from external services.
+  * `messages`: Request-Reply style messages.
+  * `changes`: For change captured by debezium.
+* '_' is used in single section with multiple words, '-' is used to separate section.
+  * For example, `event-transaction_log-pending`.
+* In cases where the naming in controlled by 3rd party libraries, other separators may be used, such as `.` or `:`.
+
 ### Library Usage
 
 * Spring family is the first choice. Whenever a functionality can be achieved by Spring, it should be used. ** No reinventing the wheel.**

@@ -16,6 +16,7 @@ import org.mockito.ArgumentMatchers.eq
 import org.mockito.kotlin.whenever
 import org.mockito.kotlin.any
 import org.springframework.boot.test.mock.mockito.MockBean
+import org.springframework.context.ApplicationEventPublisher
 import org.springframework.core.task.SyncTaskExecutor
 import org.springframework.data.redis.core.RedisOperations
 import org.springframework.data.redis.core.ValueOperations
@@ -45,9 +46,14 @@ class AccountServiceUnitTest {
     private lateinit var valueOperations: ValueOperations<String, String>
 
     @MockBean
-    private lateinit var kafkaOperations: KafkaOperations<String, TransactionMessage>
+    private lateinit var eventPublisher: ApplicationEventPublisher
+
+    @MockBean
+    private lateinit var kafkaOperations: KafkaOperations<String, Any>
 
     private lateinit var transactionProcessor: TransactionProcessor
+
+    private lateinit var transactionEventPublisher: TransactionEventPublisher
 
     @BeforeEach
     fun setupMock() {
@@ -59,15 +65,20 @@ class AccountServiceUnitTest {
             transactionProcessor.onReceivingPendingTransaction(it.arguments[2] as TransactionMessage)
             CompletableFuture.completedFuture(null)
         }
+        whenever(eventPublisher.publishEvent(any<TransactionMessage>())).thenAnswer {
+            transactionEventPublisher.publishPendingTransactionMessage(it.arguments[0] as TransactionMessage)
+            CompletableFuture.completedFuture(null)
+        }
 
         accountService = AccountService(
             accountRepo,
             transactionLog,
             redisOperations,
-            kafkaOperations,
+            eventPublisher,
             Duration.ofSeconds(10)
         )
         transactionProcessor = TransactionProcessor(accountService, SyncTaskExecutor())
+        transactionEventPublisher = TransactionEventPublisher(kafkaOperations)
     }
 
     @Test
