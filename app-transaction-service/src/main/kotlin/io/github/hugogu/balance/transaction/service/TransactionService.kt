@@ -58,7 +58,7 @@ class TransactionService(
             TransactionStatus.PENDING, TransactionStatus.FAILED -> {
                 return try {
                     accountServiceClient.processTransactionWithRetry(transactionMessage)
-                    transactionRepo.updateTransactionStatus(transactionId, TransactionStatus.COMPLETED)
+                    transaction
                 } catch (e: DataAccessException) {
                     log.error("Failed to process transaction", e)
                     transactionRepo.updateTransactionStatus(transactionId, TransactionStatus.FAILED)
