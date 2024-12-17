@@ -5,8 +5,11 @@
 Debezium was used to capture the changes in the account table. The connector configuration is stored in the `debezium-connector-config.json` file.
 When the account service is up, an initial setup of the connector is required by running the following command:
 
+Please note: the `slot.name` of each connector should be unique.
+
 ```shell
 curl -X POST -H "Content-Type: application/json" --data @config/debezium-connector-config.json http://localhost:8083/connectors
+curl -X POST -H "Content-Type: application/json" --data @config/outbox-connector-config.json http://localhost:8083/connectors
 ```
 
 Then you can check the status of the connector on [this page](http://localhost:8083/connectors/account-changes-connector/status).
@@ -21,6 +24,12 @@ Command to pause the connector:
 
 ```shell
 curl -X PUT http://localhost:8083/connectors/account-changes-connector/pause
+```
+
+Command to delete a connector:
+
+```shell
+curl -X DELETE http://localhost:8083/connectors/account-outbox-connector
 ```
 
 In order to update the existing connector after the connector is created, the following command:

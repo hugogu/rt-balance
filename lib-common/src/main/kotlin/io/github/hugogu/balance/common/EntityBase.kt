@@ -26,7 +26,7 @@ abstract class EntityBase : Persistable<UUID> {
         return id
     }
 
-    fun setId(id: UUID) {
+    fun setId(id: UUID?) {
         this.id = id
     }
 

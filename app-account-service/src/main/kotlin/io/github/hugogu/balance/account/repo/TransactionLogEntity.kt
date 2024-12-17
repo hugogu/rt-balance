@@ -47,12 +47,14 @@ class TransactionLogEntity : EntityBase() {
 
     fun toEvent(): TransactionProcessedEvent {
         return TransactionProcessedEvent(
+            id = id!!,
             transactionId = id!!,
             result = when (status) {
                 ProcessingStatus.SUCCEED -> TransactionProcessStatus.COMPLETED
                 ProcessingStatus.FAILED -> TransactionProcessStatus.FAILED
                 ProcessingStatus.INIT -> TransactionProcessStatus.ACCEPTED
-            }
+            },
+            timestamp = Instant.now()
         )
     }
 }

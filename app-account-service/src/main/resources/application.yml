@@ -63,6 +63,8 @@ spring:
       port: 6379
 
 service:
+  outbox:
+    enabled: true
   lock:
     timeout: 10s
 

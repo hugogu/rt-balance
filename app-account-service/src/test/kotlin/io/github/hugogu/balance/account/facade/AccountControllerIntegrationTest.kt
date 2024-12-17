@@ -154,5 +154,11 @@ class AccountControllerIntegrationTest {
                 .header("X-Request-ID", transactionMessage.transactionId.toString())
                 .content(objectMapper.writeValueAsString(transactionMessage)))
             .andExpect(status().isOk)
+
+        mockMvc.perform(
+            get("/account/outbox/${transactionMessage.transactionId}")
+                .contentType(MediaType.APPLICATION_JSON))
+            .andExpect(status().isOk)
+            .andExpect(jsonPath("$.transactionId").value(transactionMessage.transactionId.toString()))
     }
 }

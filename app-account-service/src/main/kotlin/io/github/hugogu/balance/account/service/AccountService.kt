@@ -32,6 +32,7 @@ import org.springframework.transaction.annotation.Transactional
 import org.springframework.validation.annotation.Validated
 import java.math.BigDecimal
 import java.time.Duration
+import java.time.Instant
 import java.util.UUID
 
 typealias AccountPair = Pair<AccountEntity, AccountEntity>
@@ -81,22 +82,28 @@ class AccountService(
     }
 
     @Transactional
-    fun <T> persistAndProcessTransaction(transaction: TransactionMessage, processor: (TransactionMessage) -> T): T {
-        return processWithLock("transaction-lock:${transaction.transactionId}") {
+    fun <T> persistAndExecute(transaction: TransactionMessage, processor: (TransactionMessage) -> T): T {
+        val transactionId = transaction.transactionId
+
+        return processWithLock("transaction-lock:${transactionId}") {
+            val event = TransactionProcessedEvent(
+                transactionId,
+                transactionId,
+                timestamp = Instant.now()
+            )
             // In synchronous mode, the transaction log is only recorded for reference, not for further processing.
             // So the status upon insertion is just SUCCEED.
             try {
                 transactionLogRepo.save(TransactionLogEntity.from(transaction, status = ProcessingStatus.SUCCEED))
                 val result = processor(transaction)
-                eventPublisher.publishEvent(TransactionProcessedEvent(transaction.transactionId))
+                eventPublisher.publishEvent(event)
                 result
             } catch (ex: PersistenceException) {
-                val event = TransactionProcessedEvent(
-                    transaction.transactionId,
-                    TransactionProcessStatus.FAILED,
-                    ex.message.orEmpty()
+                val failedEvent = event.copy(
+                    result = TransactionProcessStatus.FAILED,
+                    message = ex.message.orEmpty()
                 )
-                eventPublisher.publishEvent(event)
+                eventPublisher.publishEvent(failedEvent)
                 throw ex
             }
         }

@@ -2,6 +2,7 @@ package io.github.hugogu.balance.account.service
 
 import io.github.hugogu.balance.account.repo.AccountEntity
 import io.github.hugogu.balance.account.repo.AccountRepo
+import io.github.hugogu.balance.account.repo.OutboxRepo
 import io.github.hugogu.balance.account.repo.ProcessingStatus
 import io.github.hugogu.balance.account.repo.TransactionLogEntity
 import io.github.hugogu.balance.account.repo.TransactionLogRepo
@@ -38,6 +39,9 @@ class AccountServiceUnitTest {
 
     @MockBean
     private lateinit var transactionLog: TransactionLogRepo
+
+    @MockBean
+    private lateinit var outboxRepo: OutboxRepo
 
     @MockBean
     private lateinit var redisOperations: RedisOperations<String, String>
@@ -78,7 +82,7 @@ class AccountServiceUnitTest {
             Duration.ofSeconds(10)
         )
         transactionProcessor = TransactionProcessor(accountService, SyncTaskExecutor())
-        transactionEventPublisher = TransactionEventPublisher(kafkaOperations)
+        transactionEventPublisher = TransactionEventPublisher(kafkaOperations, outboxRepo, true)
     }
 
     @Test
@@ -118,7 +122,7 @@ class AccountServiceUnitTest {
         val transaction = TransactionMessage(UUID.randomUUID(), fromAccount.id!!, toAccount.id!!, BigDecimal.TEN)
         whenever(accountRepo.findAllById(any())).thenReturn(listOf(fromAccount, toAccount))
 
-        val (from, to) = accountService.persistAndProcessTransaction(transaction, accountService::processTransaction)
+        val (from, to) = accountService.persistAndExecute(transaction, accountService::processTransaction)
 
         assertEquals(from, fromAccount)
         assertEquals(to, toAccount)

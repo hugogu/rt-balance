@@ -1,6 +1,7 @@
 package io.github.hugogu.balance.common.error
 
 import jakarta.persistence.EntityNotFoundException
+import jakarta.persistence.PersistenceException
 import jakarta.validation.ConstraintViolationException
 import jakarta.validation.ValidationException
 import org.slf4j.LoggerFactory
@@ -14,6 +15,12 @@ import org.springframework.web.bind.annotation.ExceptionHandler
 
 @ControllerAdvice
 class ApiErrorHandlingAdvice {
+    @ExceptionHandler(PersistenceException::class)
+    fun handPersistenceException(e: PersistenceException): ErrorResponse {
+        log.warn("ExceptionHandler hands PersistenceException", e)
+        return ErrorResponse.create(e, HttpStatus.INTERNAL_SERVER_ERROR, e.message.orEmpty())
+    }
+
     @ExceptionHandler(CannotAcquireLockException::class)
     fun handException(e: CannotAcquireLockException): ErrorResponse {
         log.warn("ExceptionHandler hands CannotAcquireLockException", e)

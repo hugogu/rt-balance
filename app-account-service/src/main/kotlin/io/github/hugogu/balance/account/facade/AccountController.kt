@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestHeader
 import org.springframework.web.bind.annotation.RestController
+import java.time.Instant
 import java.util.UUID
 
 @Validated
@@ -52,7 +53,7 @@ class AccountController(
      */
     @PostMapping("/account:transfer")
     fun processTransaction(@Valid @RequestBody transaction: TransactionMessage): AccountDetail {
-        val (fromAccount, _) = accountService.persistAndProcessTransaction(transaction) {
+        val (fromAccount, _) = accountService.persistAndExecute(transaction.copy(timestamp = Instant.now())) {
             accountService.processTransaction(transaction)
         }
 
@@ -68,7 +69,7 @@ class AccountController(
     @PostMapping("/account:transfer/message")
     fun postTransactionMessage(@Valid @RequestBody transaction: TransactionMessage): ResponseEntity<Void> {
         // Only send to Kafka, then the message will be processed asynchronously.
-        accountService.postTransactionMessageToBroker(transaction)
+        accountService.postTransactionMessageToBroker(transaction.copy(timestamp = Instant.now()))
 
         return ResponseEntity.status(HttpStatus.ACCEPTED).build()
     }
@@ -95,7 +96,7 @@ class AccountController(
     @PostMapping("/account:transfer/async")
     fun processTransactionAsync(@Valid @RequestBody transaction: TransactionMessage): ResponseEntity<Void> {
         // Only save into database, then Debezium will capture the change and send it to Kafka.
-        accountService.persistPendingTransactionMessage(transaction)
+        accountService.persistPendingTransactionMessage(transaction.copy(timestamp = Instant.now()))
 
         return ResponseEntity.status(HttpStatus.ACCEPTED).build()
     }
