@@ -11,6 +11,8 @@ server:
 spring:
   application:
     name: real-balance-account
+  liquibase:
+    change-log: classpath:/db/changelog/db.changelog-master.yaml
   datasource:
     url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:account}
     username: postgres
