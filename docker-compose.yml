@@ -50,8 +50,6 @@ services:
       - STATUS_STORAGE_TOPIC=debezium_connect_statuses
     depends_on:
       - kafka
-    volumes:
-      - ./config:/config/kafka-connect
 
   redis:
     image: "redis:7-alpine"
@@ -65,6 +63,9 @@ services:
     environment:
       ZOOKEEPER_CLIENT_PORT: 2181
       ZOOKEEPER_TICK_TIME: 2000
+    volumes:
+      - ./tmp/zookeeper/data:/data
+      - ./tmp/zookeeper/log:/datalog
 
   kafka:
     image: confluentinc/cp-kafka:7.8.0
@@ -83,6 +84,10 @@ services:
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
       # This docker-compose defined only 1 broker, so the replication factor is 1.
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_CLUSTER_ID: efpX-AG4Q76sUSiEDcvCoQ
+      KAFKA_BROKER_ID: 1
+    volumes:
+      - ./tmp/kafka/data:/var/lib/kafka/data
     depends_on:
       - zookeeper
 

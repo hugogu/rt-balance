@@ -28,6 +28,10 @@ You may need to refer to
     ./gradlew :app-account-service:bootBuildImage
     ./gradlew :app-transaction-service:bootBuildImage
     ```
+* Verify the image built.
+    ```bash
+    docker images | grep app-
+    ```
   
 :warning: The image built is for amd64 architecture, it may not perform well for Mac Apple Silicon Chipset users. Spring Boot 3.4 will provide a native support to it.
 

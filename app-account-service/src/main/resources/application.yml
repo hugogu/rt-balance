@@ -104,3 +104,5 @@ logging:
       springframework:
         retry:
           support: INFO
+        web:
+          filter: DEBUG

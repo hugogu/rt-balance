@@ -24,3 +24,13 @@ scrape_configs:
     scrape_interval: 5s
     static_configs:
       - targets: ['localhost:8080', 'account-service-api:8080']
+
+  - job_name: 'kubernetes-services'
+    kubernetes_sd_configs:
+      - role: service
+    relabel_configs:
+      - source_labels: [__meta_kubernetes_service_label_app]
+        action: keep
+        regex: (account-service|transaction-service)
+    metrics_path: /actuator/prometheus
+    scrape_interval: 5s
