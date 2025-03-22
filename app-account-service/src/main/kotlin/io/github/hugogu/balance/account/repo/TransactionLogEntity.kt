@@ -4,7 +4,7 @@ import io.github.hugogu.balance.common.EntityBase
 import io.github.hugogu.balance.common.event.TransactionProcessStatus
 import io.github.hugogu.balance.common.event.TransactionProcessedEvent
 import io.github.hugogu.balance.common.model.TransactionMessage
-import io.hypersistence.utils.hibernate.type.json.JsonBinaryType
+import io.hypersistence.utils.hibernate.type.json.JsonType
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
 import jakarta.persistence.EnumType
@@ -18,8 +18,8 @@ import java.time.Instant
 @Entity
 @Table(name = "transaction_log")
 class TransactionLogEntity : EntityBase() {
-    @Type(JsonBinaryType::class)
-    @Column(columnDefinition = "jsonb")
+    @Type(JsonType::class)
+    @Column(columnDefinition = "blob")
     lateinit var transactionData: TransactionMessage
 
     @Enumerated(EnumType.STRING)

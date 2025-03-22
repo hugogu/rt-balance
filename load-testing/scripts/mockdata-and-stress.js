@@ -1,5 +1,5 @@
 import http from 'k6/http';
-import { check } from 'k6';
+import { check, sleep } from 'k6';
 import { uuidv4 } from 'https://jslib.k6.io/k6-utils/1.1.0/index.js';
 import { randomItem, randomIntBetween, randomString } from 'https://jslib.k6.io/k6-utils/1.1.0/index.js';
 
@@ -85,4 +85,6 @@ export default function () {
             console.error(`Transaction creation failed: ${res.status}`);
         }
     }
+
+    sleep(0.1);
 }

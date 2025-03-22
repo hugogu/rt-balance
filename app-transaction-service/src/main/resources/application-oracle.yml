@@ -1,0 +1,5 @@
+spring:
+  datasource:
+    url: jdbc:oracle:thin:@${DB_HOST:localhost}:${DB_PORT:1521}:${DB_NAME:orcl}
+    username: ODBA
+    password: 5208

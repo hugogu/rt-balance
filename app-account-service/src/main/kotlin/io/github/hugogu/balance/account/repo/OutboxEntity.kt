@@ -2,7 +2,7 @@ package io.github.hugogu.balance.account.repo
 
 import io.github.hugogu.balance.common.EntityBase
 import io.github.hugogu.event.DomainEvent
-import io.hypersistence.utils.hibernate.type.json.JsonBinaryType
+import io.hypersistence.utils.hibernate.type.json.JsonType
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
 import jakarta.persistence.Table
@@ -23,8 +23,8 @@ class OutboxEntity : EntityBase() {
     @Column(name = "aggregate_id")
     var aggregateId: String = ""
 
-    @Type(JsonBinaryType::class)
-    @Column(columnDefinition = "jsonb")
+    @Type(JsonType::class)
+    @Column(columnDefinition = "blob")
     lateinit var payload: DomainEvent
 
     var type: String = ""

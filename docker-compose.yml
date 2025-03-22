@@ -8,8 +8,11 @@ services:
       # Used only when the value are specific to the environment.
       - SERVER_PORT=8082
       - JAVA_TOOL_OPTIONS=-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005
+      - SPRING_DATASOURCE_URL=jdbc:oracle:thin:@oracle-master:1521:orcl
+      - SPRING_DATASOURCE_USERNAME=ODBA
+      - SPRING_DATASOURCE_PASSWORD=5208
     depends_on:
-      - postgres
+      - oracle-master
 
   account-service-api:
     image: app-account-service:0.0.1-SNAPSHOT
@@ -17,25 +20,38 @@ services:
       - "8080:8080"
       - "5006:5005"
     environment:
-      - DB_HOST=postgres
+      - DB_HOST=oracle-master
       - SPRING_DATA_REDIS_HOST=redis
       - SPRING_KAFKA_BOOTSTRAP_SERVERS=kafka:9092
+      - SPRING_DATASOURCE_URL=jdbc:oracle:thin:@oracle-master:1521:orcl
+      - SPRING_DATASOURCE_USERNAME=ODBA
+      - SPRING_DATASOURCE_PASSWORD=5208
       - JAVA_TOOL_OPTIONS=-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005
     depends_on:
       - redis
-      - postgres
+      - oracle-master
 
-  postgres:
-    image: "postgres:17-alpine"
-    hostname: postgres
+  oracle-master:
+    image: yycx/oracle11
     ports:
-      - "5432:5432"
+      - "1521:1521"
     environment:
-      - POSTGRES_DB=account
-      - POSTGRES_PASSWORD=postgres
-    command: [ "postgres", "-c", "wal_level=logical" ]
+      - ORACLE_ALLOW_REMOTE=true
+      - ORACLE_SID=ORCL
+      - ORACLE_HOME=/opt/oracle/app/product/11.2.0/dbhome_1
     volumes:
-      - ./tmp/pgdata:/var/lib/postgresql/data
+      - ./tmp/oracle:/u01/app/oracle
+
+  oracle-slave:
+    image: yycx/oracle11
+    ports:
+      - "1522:1521"
+    environment:
+      - ORACLE_ALLOW_REMOTE=true
+      - ORACLE_SID=ORCL
+      - ORACLE_HOME=/opt/oracle/app/product/11.2.0/dbhome_1
+    volumes:
+      - ./tmp/oracle-slave:/u01/app/oracle
 
   connect:
     # Only 3.0 support PG 17.0

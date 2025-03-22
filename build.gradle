@@ -85,7 +85,7 @@ subprojects {
         implementation 'org.jetbrains.kotlin:kotlin-reflect'
         implementation 'org.springframework.kafka:spring-kafka'
         runtimeOnly 'io.micrometer:micrometer-registry-prometheus'
-        runtimeOnly 'org.postgresql:postgresql'
+        runtimeOnly 'com.oracle.database.jdbc:ojdbc11'
         testImplementation 'org.springframework.boot:spring-boot-starter-test'
         testImplementation 'org.jetbrains.kotlin:kotlin-test-junit5'
         testImplementation 'org.springframework.kafka:spring-kafka-test'

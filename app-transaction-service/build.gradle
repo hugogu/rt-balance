@@ -11,7 +11,7 @@ dependencies {
     implementation("io.hypersistence:hypersistence-utils-hibernate-63:3.9.0")
     implementation("org.flywaydb:flyway-core")
     runtimeOnly("io.micrometer:micrometer-registry-prometheus")
-    runtimeOnly("org.postgresql:postgresql")
+    runtimeOnly("com.oracle.database.jdbc:ojdbc11:23.7.0.25.01")
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation("io.projectreactor:reactor-test")
 }
