@@ -1,0 +1,15 @@
+SID_LIST_LISTENER =
+  (SID_LIST =
+    (SID_DESC =
+      (GLOBAL_DBNAME = orcl)
+      (ORACLE_HOME = /opt/oracle/app/product/11.2.0/dbhome_1)
+      (SID_NAME = orcl)
+    )
+  )
+
+LISTENER =
+  (DESCRIPTION_LIST =
+    (DESCRIPTION =
+      (ADDRESS = (PROTOCOL = TCP)(HOST = oracle-slave)(PORT = 1521))
+    )
+  )

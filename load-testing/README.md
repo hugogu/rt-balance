@@ -51,6 +51,13 @@ This component can be a shared library for all projects that need to run load te
    export PATH=$(go env GOPATH)/bin:$PATH
    xk6 build --with "github.com/grafana/xk6-output-influxdb" --output /tmp/k6
    ```
+1. Build with xk6 image
+    ```shell
+    docker run --rm -it -e GOOS=darwin -u "$(id -u):$(id -g)" -v "${PWD}:/xk6" \
+    grafana/xk6 build \
+    --with github.com/grafana/xk6-output-influxdb@v0.6.0
+    ```
+   Then you will find the binary in working directory.
 
 ### How to Run
 

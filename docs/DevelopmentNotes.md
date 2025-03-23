@@ -55,7 +55,73 @@ curl -X PUT -H "Content-Type: application/json" --data '{
 }' http://localhost:8083/connectors/account-changes-connector/config
 ```
 
+## Setup Oracle Data Guard
+
+```shell
+docker-compose up -d oracle-master oracle-slave redis kafka grafana influxdb
+```
+
+* [解决Oracle数据库在Docker容器中安装后无法重启的常见问题与技巧](https://www.oryoy.com/news/jie-jue-oracle-shu-ju-ku-zai-docker-rong-qi-zhong-an-zhuang-hou-wu-fa-zhong-qi-de-chang-jian-wen-ti.html)
+
+Connects to oracle:
+```shell
+sqlplus ODBA/5208@localhost:1521/orcl
+sqlplus SYS/5208@localhost:1521/orcl AS SYSDBA
+```
+
+Check if ARCHIVELOG is enabled:
+```sql
+SELECT log_mode FROM v$database;
+```
+If not enabled, need to enable it:
+```oraclesqlplus
+SHUTDOWN IMMEDIATE;
+STARTUP MOUNT;
+ALTER DATABASE ARCHIVELOG;
+ALTER DATABASE OPEN;
+```
+
+Docker中的Oracle的安装位置是`/opt/oracle/app/product/11.2.0/dbhome_1/`，查询状态
+```shell
+docker exec -it real-balance-oracle-master-1 /opt/oracle/app/product/11.2.0/dbhome_1/bin/lsnrctl status
+```
+```shell
+docker exec -it real-balance-oracle-master-1 /opt/oracle/app/product/11.2.0/dbhome_1/bin/lsnrctl status
+```
+
+```shell
+docker exec -it real-balance-oracle-slave-1 /opt/oracle/app/product/11.2.0/dbhome_1/bin/rman target /
+```
+
+* Check if a node is running as standby
+```oraclesqlplus
+SELECT DATABASE_ROLE FROM V$DATABASE;
+```
+
+```shell
+./rman target SYS/5208@localhost:1521/orcl 
+RESTORE CONTROLFILE FROM '/u01/app/oracle/standby.ctl';
+
+ALTER DATABASE MOUNT STANDBY DATABASE;
+ALTER DATABASE OPEN READ ONLY;
+
+ALTER DATABASE RECOVER MANAGED STANDBY DATABASE CANCEL;
+ALTER DATABASE RECOVER MANAGED STANDBY DATABASE DISCONNECT FROM SESSION;
+ALTER DATABASE RECOVER MANAGED STANDBY DATABASE USING CURRENT LOGFILE DISCONNECT;
+```
+
+```oraclesqlplus
+SELECT PROCESS, STATUS, SEQUENCE# FROM V$MANAGED_STANDBY;
+SELECT SEQUENCE#, APPLIED FROM V$ARCHIVED_LOG ORDER BY SEQUENCE#;
+SELECT MAX(SEQUENCE#) AS LAST_APPLIED_LOG FROM V$LOG_HISTORY;
+```
+
 ## Useful commands
+
+```shell
+docker exec -it real-balance-oracle-master-1 bash
+echo 'export ORACLE_HOME=/opt/oracle/app/product/11.2.0/dbhome_1' >> /etc/profile
+```
 
 * Check Docker context
     ```bash
