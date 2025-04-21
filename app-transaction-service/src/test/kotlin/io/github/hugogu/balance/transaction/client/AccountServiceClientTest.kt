@@ -1,5 +1,7 @@
 package io.github.hugogu.balance.transaction.client
 
+import io.github.hugogu.balance.common.AccountServiceClient
+import io.github.hugogu.balance.common.model.AccountUpdateRequest
 import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.Matchers.equalTo
 import org.junit.jupiter.api.BeforeEach

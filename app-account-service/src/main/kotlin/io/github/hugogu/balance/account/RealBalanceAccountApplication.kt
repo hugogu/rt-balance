@@ -1,5 +1,6 @@
 package io.github.hugogu.balance.account
 
+import org.apache.dubbo.config.spring.context.annotation.EnableDubbo
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.runApplication
 import org.springframework.cache.annotation.EnableCaching
@@ -11,6 +12,7 @@ import org.springframework.transaction.annotation.EnableTransactionManagement
 @EnableRetry
 @EnableJpaAuditing
 @EnableTransactionManagement
+@EnableDubbo
 @SpringBootApplication(scanBasePackages = ["io.github.hugogu.balance"])
 class RealBalanceAccountApplication
 

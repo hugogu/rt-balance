@@ -1,5 +1,6 @@
 package io.github.hugogu.balance.common.model
 
+import java.io.Serializable
 import com.fasterxml.jackson.annotation.JsonProperty
 
 data class EventSource(
@@ -20,4 +21,4 @@ data class EventSource(
     val txId: Int = 0,
     val lsn: Long = 0L,
     val sequences: List<String> = emptyList(),
-)
+) : Serializable

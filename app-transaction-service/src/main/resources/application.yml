@@ -26,9 +26,23 @@ spring:
     deserialization:
       fail-on-unknown-properties: false
 
-account:
-  service:
-    url: http://localhost:8080/
+dubbo:
+  application:
+    name: ${spring.application.name}
+    check-serializable: true
+    auto-trust-serialize-class: true
+  protocol:
+    name: dubbo
+    port: -1
+  registry:
+    address: nacos://${NACOS_HOST:localhost}:${NACOS_PORT:8848}
+  consumer:
+    check: false
+    timeout: 3000
+    retries: 0
+  provider:
+    timeout: 3000
+    retries: 0
 
 management:
   endpoints:

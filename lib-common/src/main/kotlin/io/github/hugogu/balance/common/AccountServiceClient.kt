@@ -1,43 +1,37 @@
-package io.github.hugogu.balance.transaction.client
+package io.github.hugogu.balance.common
 
+import io.github.hugogu.balance.common.model.AccountDetail
+import io.github.hugogu.balance.common.model.AccountCreationRequest
+import io.github.hugogu.balance.common.model.AccountIdentity
 import io.github.hugogu.balance.common.model.TransactionMessage
-import org.springframework.cloud.openfeign.FeignClient
+import io.github.hugogu.balance.common.model.AccountUpdateRequest
+import org.apache.dubbo.config.annotation.DubboService
 import org.springframework.retry.annotation.Retryable
-import org.springframework.web.bind.annotation.GetMapping
-import org.springframework.web.bind.annotation.PathVariable
-import org.springframework.web.bind.annotation.PostMapping
-import org.springframework.web.bind.annotation.RequestBody
-import org.springframework.web.bind.annotation.RequestHeader
 import java.math.BigDecimal
 import java.util.*
 
-@FeignClient(name = "account-service", url = "\${account.service.url}")
+@DubboService(version = "1.0.0")
 interface AccountServiceClient {
 
-    @PostMapping("/account")
     fun createAccount(
-        @RequestBody request: AccountCreationRequest,
-        @RequestHeader("X-Request-ID") requestId: UUID
+        request: AccountCreationRequest,
+        requestId: UUID
     ): AccountIdentity
 
-    @GetMapping("/account/{id}")
-    fun queryAccountDetail(@PathVariable id: UUID): AccountDetail
+    fun queryAccountDetail(id: UUID): AccountDetail
 
-    @PostMapping("/account:transfer")
     fun processTransaction(transaction: TransactionMessage): AccountDetail
 
-    @PostMapping("/account:debit/{accountId}")
     fun debitAccount(
-        @PathVariable accountId: UUID,
-        @RequestBody request: AccountUpdateRequest,
-        @RequestHeader("X-Request-ID") requestId: UUID
+        accountId: UUID,
+        request: AccountUpdateRequest,
+        requestId: UUID
     ): AccountDetail
 
-    @PostMapping("/account:credit/{accountId}")
     fun creditAccount(
-        @PathVariable accountId: UUID,
-        @RequestBody request: AccountUpdateRequest,
-        @RequestHeader("X-Request-ID") requestId: UUID
+        accountId: UUID,
+        request: AccountUpdateRequest,
+        requestId: UUID
     ): AccountDetail
 
     @Retryable

@@ -9,6 +9,8 @@ dependencies {
     implementation("io.hypersistence:hypersistence-utils-hibernate-63:3.9.0")
     implementation 'org.springframework.boot:spring-boot-starter-data-redis'
     implementation("org.flywaydb:flyway-core")
+    implementation "org.apache.dubbo:dubbo-spring-boot-starter:3.3.4"
+    implementation "org.apache.dubbo:dubbo-registry-nacos:3.3.4"
     runtimeOnly("io.micrometer:micrometer-registry-prometheus")
     runtimeOnly("org.postgresql:postgresql")
     testImplementation("org.springframework.boot:spring-boot-starter-test")

@@ -2,12 +2,13 @@ package io.github.hugogu.balance.transaction.service
 
 import io.github.hugogu.balance.common.model.AccountStatus
 import io.github.hugogu.balance.common.model.TransactionMessage
-import io.github.hugogu.balance.transaction.client.AccountServiceClient
+import io.github.hugogu.balance.common.AccountServiceClient
 import io.github.hugogu.balance.transaction.repo.TransactionEntity
 import io.github.hugogu.balance.transaction.repo.TransactionRepo
 import io.github.hugogu.balance.transaction.repo.TransactionStatus
 import io.github.hugogu.balance.transaction.service.error.TransactionBusinessError
 import jakarta.persistence.EntityNotFoundException
+import org.apache.dubbo.config.annotation.DubboReference
 import org.slf4j.LoggerFactory
 import org.springframework.dao.DataAccessException
 import org.springframework.scheduling.annotation.Async
@@ -20,6 +21,7 @@ import java.util.UUID
 @Service
 class TransactionService(
     private val transactionRepo: TransactionRepo,
+    @DubboReference(version = "1.0.0")
     private val accountServiceClient: AccountServiceClient
 ) {
     @Transactional

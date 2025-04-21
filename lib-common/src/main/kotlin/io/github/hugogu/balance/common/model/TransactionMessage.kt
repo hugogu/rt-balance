@@ -1,6 +1,7 @@
 package io.github.hugogu.balance.common.model
 
 import io.github.hugogu.balance.common.validation.NotZeroUUID
+import java.io.Serializable
 import java.math.BigDecimal
 import java.time.Instant
 import java.util.UUID
@@ -14,4 +15,4 @@ data class TransactionMessage(
     val toAccount: UUID = UUID(0, 0),
     val amount: BigDecimal = BigDecimal.ZERO,
     val timestamp: Instant = Instant.EPOCH
-)
+) : Serializable

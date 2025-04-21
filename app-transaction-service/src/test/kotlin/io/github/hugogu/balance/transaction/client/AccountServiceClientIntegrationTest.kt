@@ -1,5 +1,7 @@
 package io.github.hugogu.balance.transaction.client
 
+import io.github.hugogu.balance.common.AccountServiceClient
+import io.github.hugogu.balance.common.model.AccountCreationRequest
 import io.github.hugogu.balance.common.model.TransactionMessage
 import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test

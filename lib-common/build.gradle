@@ -1,0 +1,4 @@
+dependencies {
+    implementation "org.apache.dubbo:dubbo-spring-boot-starter:3.3.4"
+    implementation "org.apache.dubbo:dubbo-registry-nacos:3.3.4"
+}

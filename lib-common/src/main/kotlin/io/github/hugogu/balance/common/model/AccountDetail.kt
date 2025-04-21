@@ -1,9 +1,9 @@
-package io.github.hugogu.balance.transaction.client
+package io.github.hugogu.balance.common.model
 
 import com.fasterxml.jackson.annotation.JsonProperty
-import io.github.hugogu.balance.common.model.AccountStatus
 import java.math.BigDecimal
 import java.time.Instant
+import java.io.Serializable
 import java.util.*
 
 data class AccountDetail(
@@ -14,4 +14,4 @@ data class AccountDetail(
     val balance: BigDecimal = BigDecimal.ZERO,
     val createTime: Instant = Instant.EPOCH,
     val status: AccountStatus = AccountStatus.ACTIVE,
-)
+) : Serializable

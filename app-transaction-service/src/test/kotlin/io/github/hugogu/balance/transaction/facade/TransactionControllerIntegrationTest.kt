@@ -3,8 +3,8 @@ package io.github.hugogu.balance.transaction.facade
 import com.fasterxml.jackson.databind.ObjectMapper
 import io.github.hugogu.balance.common.model.AccountStatus
 import io.github.hugogu.balance.common.model.TransactionMessage
-import io.github.hugogu.balance.transaction.client.AccountDetail
-import io.github.hugogu.balance.transaction.client.AccountServiceClient
+import io.github.hugogu.balance.common.model.AccountDetail
+import io.github.hugogu.balance.common.AccountServiceClient
 import io.github.hugogu.balance.transaction.repo.TransactionRepo
 import io.github.hugogu.balance.transaction.repo.TransactionStatus
 import org.junit.jupiter.api.BeforeEach
