@@ -8,47 +8,97 @@ redis:
   image: redis:7-alpine
   port: 6379
 
+nacos:
+  global:
+    storageClass: "standard"
+  
+  auth:
+    enabled: false
+  
+  mode: standalone
+  
+  service:
+    port: 8848
+    
+  persistence:
+    enabled: true
+    size: 1Gi
+    
+  resources:
+    limits:
+      cpu: 200m
+      memory: 2Gi
+    requests:
+      cpu: 100m
+      memory: 1Gi
+
 accountService:
   image: app-account-service:0.0.1-SNAPSHOT
-  replicas: 2
-  tomcat:
-    thread: 8
-  jvm:
-    thread: 100
-  db:
-    host: account-db
-    user: postgres
-    password: postgres
-    connectionTimeout: 2000
-  redis:
-    host: redis
-  kafka:
-    bootstrapServers: kafka:9092
+  replicas: 1
   hpa:
     enabled: true
     minReplicas: 1
     maxReplicas: 3
     targetCPUUtilizationPercentage: 60
+  env:
+    - name: DB_HOST
+      value: account-db
+    - name: DB_NAME
+      value: account
+    - name: SPRING_DATA_REDIS_HOST
+      value: redis
+    - name: SPRING_DATASOURCE_USERNAME
+      value: postgres
+    - name: SPRING_DATASOURCE_PASSWORD
+      value: postgres
+    - name: SPRING_DATASOURCE_HIKARI_CONNECTION_TIMEOUT
+      value: "2000"
+    - name: SPRING_KAFKA_BOOTSTRAP_SERVERS
+      value: kafka:9092
+    - name: SERVER_TOMCAT_THREADS_MAX
+      value: "8"
+    - name: BPL_JVM_THREAD_COUNT
+      value: "100"
+    - name: JAVA_OPTS
+      value: "-Dcom.sun.management.jmxremote -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.ssl=false -Dcom.sun.management.jmxremote.local.only=false -Dcom.sun.management.jmxremote.port=9010 -Dcom.sun.management.jmxremote.rmi.port=9010 -Djava.rmi.server.hostname=127.0.0.1"
+    - name: NACOS_HOST
+      value: nacos
+    - name: NACOS_PORT
+      value: "8848"
 
 transactionService:
   image: app-transaction-service:0.0.1-SNAPSHOT
   replicas: 1
-  tomcat:
-    thread: 4
-  jvm:
-    thread: 100
-  db:
-    host: transaction-db
-    user: postgres
-    password: postgres
-    connectionTimeout: 2000
   hpa:
     enabled: true
     minReplicas: 1
     maxReplicas: 3
     targetCPUUtilizationPercentage: 60
-  accountService:
-    url: http://account-service
+  env:
+    - name: SERVER_PORT
+      value: "8080"
+    - name: DB_HOST
+      value: transaction-db
+    - name: DB_NAME
+      value: transaction
+    - name: SPRING_DATASOURCE_USERNAME
+      value: postgres
+    - name: SPRING_DATASOURCE_PASSWORD
+      value: postgres
+    - name: SPRING_DATASOURCE_HIKARI_CONNECTION_TIMEOUT
+      value: "2000"
+    - name: SERVER_TOMCAT_THREADS_MAX
+      value: "4"
+    - name: BPL_JVM_THREAD_COUNT
+      value: "100"
+    - name: JAVA_OPTS
+      value: "-Dcom.sun.management.jmxremote -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.ssl=false -Dcom.sun.management.jmxremote.local.only=false -Dcom.sun.management.jmxremote.port=9010 -Dcom.sun.management.jmxremote.rmi.port=9010 -Djava.rmi.server.hostname=127.0.0.1"
+    - name: SPRING_KAFKA_BOOTSTRAP_SERVERS
+      value: kafka:9092
+    - name: NACOS_HOST
+      value: nacos
+    - name: NACOS_PORT
+      value: "8848"
 
 postgres:
   image: postgres:17-alpine

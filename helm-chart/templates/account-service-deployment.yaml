@@ -42,33 +42,12 @@ spec:
               memory: "2048Mi"
               cpu: "1024m"
           env:
-            - name: DB_HOST
-              value: {{ .Values.accountService.db.host }}
-            - name: DB_NAME
-              value: {{ .Values.postgres.accountDb.name }}
-            - name: SPRING_DATA_REDIS_HOST
-              value: {{ .Values.accountService.redis.host }}
-            - name: SPRING_DATASOURCE_USERNAME
-              value: {{ .Values.accountService.db.user }}
-            - name: SPRING_DATASOURCE_PASSWORD
-              value: {{ .Values.accountService.db.password }}
-            - name: SPRING_DATASOURCE_HIKARI_CONNECTION_TIMEOUT
-              value: "{{ .Values.accountService.db.connectionTimeout }}"
-            - name: SPRING_KAFKA_BOOTSTRAP_SERVERS
-              value: {{ .Values.accountService.kafka.bootstrapServers }}
-            - name: SERVER_TOMCAT_THREADS_MAX
-              value: "{{ .Values.accountService.tomcat.thread }}"
-            - name: BPL_JVM_THREAD_COUNT
-              value: "{{ .Values.accountService.jvm.thread }}"
-            # Allow remote debugging & profiling from local.
-            - name: JAVA_OPTS
-              value: "-Dcom.sun.management.jmxremote \
-                      -Dcom.sun.management.jmxremote.authenticate=false \
-                      -Dcom.sun.management.jmxremote.ssl=false \
-                      -Dcom.sun.management.jmxremote.local.only=false \
-                      -Dcom.sun.management.jmxremote.port=9010 \
-                      -Dcom.sun.management.jmxremote.rmi.port=9010 \
-                      -Djava.rmi.server.hostname=127.0.0.1"
+            {{- if .Values.accountService.env }}
+            {{- range .Values.accountService.env }}
+            - name: {{ .name }}
+              value: {{ .value | quote }}
+            {{- end }}
+            {{- end }}
           livenessProbe: {{ toYaml .Values.probes.liveness | nindent 12 }}
           readinessProbe: {{ toYaml .Values.probes.readiness | nindent 12 }}
 ---

@@ -1,0 +1,68 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nacos
+  labels:
+    app: nacos
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nacos
+  template:
+    metadata:
+      labels:
+        app: nacos
+    spec:
+      containers:
+        - name: nacos
+          image: nacos/nacos-server:v2.5.1
+          ports:
+            - containerPort: 8848
+              name: http
+            - containerPort: 9848
+              name: grpc
+          env:
+            - name: MODE
+              value: "standalone"
+          resources:
+            {{- toYaml .Values.nacos.resources | nindent 12 }}
+          volumeMounts:
+            - name: nacos-data
+              mountPath: /home/nacos/data
+      volumes:
+        - name: nacos-data
+          persistentVolumeClaim:
+            claimName: nacos-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: nacos
+  labels:
+    app: nacos
+spec:
+  type: ClusterIP
+  ports:
+    - port: 8848
+      targetPort: 8848
+      name: http
+    - port: 9848
+      targetPort: 9848
+      name: grpc
+  selector:
+    app: nacos 
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: nacos-pvc
+  labels:
+    app: nacos
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: {{ .Values.nacos.persistence.size }}
+  storageClassName: {{ .Values.nacos.global.storageClass }} 

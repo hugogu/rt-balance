@@ -30,22 +30,12 @@ spec:
           ports:
             - containerPort: 8080
           env:
-            - name: SERVER_PORT
-              value: "8080"
-            - name: DB_HOST
-              value: {{ .Values.transactionService.db.host }}
-            - name: DB_NAME
-              value: {{ .Values.postgres.transactionDb.name }}
-            - name: SPRING_DATASOURCE_USERNAME
-              value: {{ .Values.transactionService.db.user }}
-            - name: SPRING_DATASOURCE_PASSWORD
-              value: {{ .Values.transactionService.db.password }}
-            - name: SPRING_DATASOURCE_HIKARI_CONNECTION_TIMEOUT
-              value: "{{ .Values.transactionService.db.connectionTimeout }}"
-            - name: ACCOUNT_SERVICE_URL
-              value: {{ .Values.transactionService.accountService.url }}
-            - name: BPL_JVM_THREAD_COUNT
-              value: "{{ .Values.transactionService.jvm.thread }}"
+            {{- if .Values.transactionService.env }}
+            {{- range .Values.transactionService.env }}
+            - name: {{ .name }}
+              value: {{ .value | quote }}
+            {{- end }}
+            {{- end }}
           livenessProbe: {{ toYaml .Values.probes.liveness | nindent 12 }}
           readinessProbe: {{ toYaml .Values.probes.readiness | nindent 12 }}
 ---
@@ -57,7 +47,8 @@ spec:
   selector:
     app: transaction-service
   ports:
-    - protocol: TCP
+    - name: service-port
+      protocol: TCP
       port: 8080
       targetPort: 8080
 

@@ -31,7 +31,9 @@ Once deployed successfully, your dashboard should show something like this:
 
 * Upgrade if case of any helm update
 ```bash
-helm upgrade test ./helm-chart/ -f ./helm-chart/values.yaml --recreate-pods -n default
+helm dependency build ./helm-chart/
+helm upgrade test ./helm-chart/ -f ./helm-chart/values.yaml -n default
+kubectl rollout restart deployment -n default
 ```
 * Tear down
 ```bash
@@ -44,6 +46,7 @@ After deployment, you may want to expose them to the host machine for testing pu
 
 * Expose the service to local
     ```bash
+    kubectl port-forward svc/nacos 8848:8848
     kubectl port-forward svc/account-db 5433:5432
     kubectl port-forward svc/transaction-db 5434:5432
     kubectl port-forward svc/account-service 8082:8080

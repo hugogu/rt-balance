@@ -6,6 +6,9 @@ services:
       - "5005:5005"
     environment:
       # Used only when the value are specific to the environment.
+      - DB_HOST=postgres
+      - SPRING_KAFKA_BOOTSTRAP_SERVERS=kafka:9092
+      - LOGGING_LEVEL_ORG_APACHE_DUBBO=DEBUG
       - SERVER_PORT=8082
       - JAVA_TOOL_OPTIONS=-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005
       - NACOS_HOST=nacos
