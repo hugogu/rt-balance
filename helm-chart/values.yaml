@@ -147,3 +147,11 @@ probes:
     periodSeconds: 5
     timeoutSeconds: 20
 
+sshTunnel:
+  enabled: true
+  deployment:
+    image: linuxserver/openssh-server:latest
+    username: tunnel
+    password: tunnel123
+    timezone: Asia/Shanghai
+

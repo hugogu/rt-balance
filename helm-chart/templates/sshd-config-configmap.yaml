@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}-sshd-config
+data:
+  sshd_config: |
+    Port 2222
+    ListenAddress 0.0.0.0
+    PermitRootLogin no
+    PermitEmptyPasswords no
+    PasswordAuthentication yes
+    AllowTcpForwarding yes
+    GatewayPorts yes
+    X11Forwarding no
+    PrintMotd no
+    AcceptEnv LANG LC_*
+    Subsystem sftp /usr/lib/openssh/sftp-server 

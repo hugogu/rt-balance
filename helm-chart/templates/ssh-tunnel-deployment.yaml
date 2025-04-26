@@ -1,0 +1,45 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-ssh-tunnel
+  labels:
+    app: {{ .Release.Name }}-ssh-tunnel
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ .Release.Name }}-ssh-tunnel
+  template:
+    metadata:
+      labels:
+        app: {{ .Release.Name }}-ssh-tunnel
+    spec:
+      containers:
+        - name: ssh-tunnel
+          image: linuxserver/openssh-server:latest
+          ports:
+            - containerPort: 2222
+            - containerPort: 20880
+          env:
+            - name: USER_NAME
+              value: "tunnel"
+            - name: PASSWORD_ACCESS
+              value: "true"
+            - name: USER_PASSWORD
+              value: "tunnel123"
+          securityContext:
+            capabilities:
+              add:
+                - NET_ADMIN
+          volumeMounts:
+            - name: ssh-config
+              mountPath: /config
+            - name: sshd-config
+              mountPath: /etc/ssh/sshd_config
+              subPath: sshd_config
+      volumes:
+        - name: ssh-config
+          emptyDir: {}
+        - name: sshd-config
+          configMap:
+            name: {{ .Release.Name }}-sshd-config

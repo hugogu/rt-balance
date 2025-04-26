@@ -1,0 +1,4 @@
+dubbo:
+  protocol:
+    host: test-ssh-tunnel # The IP of remote sshd server.
+

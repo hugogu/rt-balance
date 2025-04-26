@@ -60,6 +60,18 @@ After deployment, you may want to expose them to the host machine for testing pu
 
 Please note, if you connect to svc/account-service, only one of the account-service will be connected.
 
+
+### Proxy to local
+1. Install sshd in k8s cluster, let's call it sshd.
+2. Let local report `dubbo.protocol.host` as `sshd`. You also need to update hosts file to make sshd point to local.
+3. Setup a proxy from k8s sshd to local host. 
+    ```bash
+    # Setup a way to access sshd in local.
+    kubectl port-forward service/test-ssh-tunnel 2222:2222
+    # Setup a reverse tunnel from remote 20880 to localhost 20880 via that sshd.
+    ssh -v -N -R 20880:localhost:20880 tunnel@127.0.0.1 -p 2222
+    ```
+
 ### Stability Tweaks
 
 #### Pod QoS Class
