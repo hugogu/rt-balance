@@ -6,9 +6,10 @@ services:
       - "5005:5005"
     environment:
       # Used only when the value are specific to the environment.
+      - TZ=Asia/Shanghai
       - SERVER_PORT=8082
       - JAVA_TOOL_OPTIONS=-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005
-      - SPRING_DATASOURCE_URL=jdbc:oracle:thin:@oracle-master:1521:orcl
+      - SPRING_DATASOURCE_URL=jdbc:oracle:thin:@(DESCRIPTION=(ADDRESS_LIST=(ADDRESS=(PROTOCOL=TCP)(HOST=oracle-master)(PORT=1521))(ADDRESS=(PROTOCOL=TCP)(HOST=oracle-slave)(PORT=1521)))(CONNECT_DATA=(SERVICE_NAME=orcl)(FAILOVER_MODE=(TYPE=SELECT)(METHOD=BASIC)(RETRIES=180)(DELAY=5))))
       - SPRING_DATASOURCE_USERNAME=ODBA
       - SPRING_DATASOURCE_PASSWORD=5208
     depends_on:
@@ -20,10 +21,10 @@ services:
       - "8080:8080"
       - "5006:5005"
     environment:
-      - DB_HOST=oracle-master
+      - TZ=Asia/Shanghai
       - SPRING_DATA_REDIS_HOST=redis
       - SPRING_KAFKA_BOOTSTRAP_SERVERS=kafka:9092
-      - SPRING_DATASOURCE_URL=jdbc:oracle:thin:@oracle-master:1521:orcl
+      - SPRING_DATASOURCE_URL=jdbc:oracle:thin:@(DESCRIPTION=(ADDRESS_LIST=(ADDRESS=(PROTOCOL=TCP)(HOST=oracle-master)(PORT=1521))(ADDRESS=(PROTOCOL=TCP)(HOST=oracle-slave)(PORT=1521)))(CONNECT_DATA=(SERVICE_NAME=orcl)(FAILOVER_MODE=(TYPE=SELECT)(METHOD=BASIC)(RETRIES=180)(DELAY=5))))
       - SPRING_DATASOURCE_USERNAME=ODBA
       - SPRING_DATASOURCE_PASSWORD=5208
       - JAVA_TOOL_OPTIONS=-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005
@@ -39,6 +40,7 @@ services:
       - ORACLE_ALLOW_REMOTE=true
       - ORACLE_SID=ORCL
       - ORACLE_HOME=/opt/oracle/app/product/11.2.0/dbhome_1
+      - TZ=Asia/Shanghai
     volumes:
       - ./tmp/oracle:/u01/app/oracle
       - ./config/oracle-master:/opt/oracle/app/product/11.2.0/dbhome_1/network/admin
@@ -51,6 +53,7 @@ services:
       - ORACLE_ALLOW_REMOTE=true
       - ORACLE_SID=ORCL
       - ORACLE_HOME=/opt/oracle/app/product/11.2.0/dbhome_1
+      - TZ=Asia/Shanghai
     volumes:
       - ./tmp/oracle-slave:/u01/app/oracle
       - ./config/oracle-slave:/opt/oracle/app/product/11.2.0/dbhome_1/network/admin

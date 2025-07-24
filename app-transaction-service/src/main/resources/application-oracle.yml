@@ -3,3 +3,24 @@ spring:
     url: jdbc:oracle:thin:@${DB_HOST:localhost}:${DB_PORT:1521}:${DB_NAME:orcl}
     username: ODBA
     password: 5208
+    hikari:
+      # Connection pool settings for failover
+      maximum-pool-size: 20
+      minimum-idle: 5
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+      leak-detection-threshold: 60000
+      # Connection validation and retry settings
+      connection-test-query: SELECT 1 FROM DUAL
+      validation-timeout: 5000
+      data-source-properties:
+        oracle.jdbc.timezoneAsRegion: false
+        # Oracle failover and retry properties
+        oracle.net.CONNECT_TIMEOUT: 10000
+        oracle.jdbc.ReadTimeout: 30000
+        oracle.net.READ_TIMEOUT: 30000
+        oracle.jdbc.autoCommitSpecCompliant: false
+        # Enable Oracle TAF (Transparent Application Failover)
+        oracle.jdbc.implicitStatementCacheSize: 20
+        oracle.jdbc.defaultRowPrefetch: 20
