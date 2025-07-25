@@ -1,3 +1,14 @@
+// 配置阿里云镜像加速插件下载
+pluginManagement {
+    repositories {
+        // 优先使用阿里云镜像
+        maven { url 'https://maven.aliyun.com/repository/gradle-plugin' }
+        maven { url 'https://maven.aliyun.com/repository/public' }
+        gradlePluginPortal() // 最后再从官方源下载
+        mavenCentral()
+    }
+}
+
 rootProject.name = 'real-balance'
 
 include(":lib-common")

@@ -1,0 +1,18 @@
+allprojects {
+    repositories {
+        // 优先使用阿里云镜像
+        maven { url 'https://maven.aliyun.com/repository/gradle-plugin' }
+        maven { url 'https://maven.aliyun.com/repository/public' }
+        maven { url 'https://maven.aliyun.com/repository/central' }
+        maven { url 'https://maven.aliyun.com/repository/google' }
+        maven { url 'https://maven.aliyun.com/repository/jcenter' }
+        // 官方源
+        mavenCentral()
+        gradlePluginPortal()
+    }
+}
+
+// 开启并行编译
+gradle.startParameter.parallel = true
+// 开启构建缓存
+gradle.startParameter.buildCacheEnabled = true
