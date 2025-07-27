@@ -17,11 +17,15 @@ dependencies {
 }
 
 bootBuildImage {
+    builder = "paketobuildpacks/builder-jammy-base:0.4.294"
+    runImage = "paketobuildpacks/run-jammy-base:0.1.21"
+    imageName = "docker.io/library/app-transaction-service:${version}"
     createdDate = "now"
     environment = [
             "BP_JVM_VERSION": "17",
             "BPL_JVM_THREAD_COUNT": "100"
     ]
+    publish = false
 }
 
 tasks.named('bootJar') {
