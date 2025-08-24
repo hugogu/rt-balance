@@ -7,10 +7,10 @@ ORCL =
     (CONNECT_DATA =
       (SERVICE_NAME = orcl)
       (FAILOVER_MODE =
-        (TYPE = SELECT)
-        (METHOD = BASIC)
-        (RETRIES = 180)
-        (DELAY = 5)
+        (TYPE = SESSION)
+        (METHOD = PRECONNECT)
+        (RETRIES = 60)
+        (DELAY = 2)
       )
     )
   )
@@ -24,10 +24,10 @@ ORCL_DG =
     (CONNECT_DATA =
       (SERVICE_NAME = orcl)
       (FAILOVER_MODE =
-        (TYPE = SELECT)
-        (METHOD = BASIC)
-        (RETRIES = 180)
-        (DELAY = 5)
+        (TYPE = SESSION)
+        (METHOD = PRECONNECT)
+        (RETRIES = 60)
+        (DELAY = 2)
       )
     )
   )

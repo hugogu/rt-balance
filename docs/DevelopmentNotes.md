@@ -68,6 +68,16 @@ Connects to oracle:
 sqlplus ODBA/5208@localhost:1521/orcl
 sqlplus SYS/5208@localhost:1521/orcl AS SYSDBA
 ```
+或者：
+```shell
+su - oracle
+sqlplus / as sysdba
+```
+
+在容器化环境中，需要配置`/etc/oratab`文件，将`orcl`的值设置为`Y`(如果已经存在侧改写)。
+```shell
+echo 'orcl:/opt/oracle/app/product/11.2.0/dbhome_1:Y' > /etc/oratab
+```
 
 Check if ARCHIVELOG is enabled:
 ```sql
@@ -79,6 +89,37 @@ SHUTDOWN IMMEDIATE;
 STARTUP MOUNT;
 ALTER DATABASE ARCHIVELOG;
 ALTER DATABASE OPEN;
+```
+
+
+```sql
+-- 在主库上查询当前日志序列号
+SELECT sequence#, first_time, next_time FROM v$log WHERE status = 'CURRENT';
+
+-- 在从库上查询应用的日志序列号
+SELECT sequence#, applied FROM v$archived_log ORDER BY sequence#;
+
+-- 检查主从复制延迟
+SELECT ROUND((SYSDATE - MAX(first_time))*24*60,1) DELAY_MINS 
+FROM v$archived_log WHERE applied = 'YES';
+
+-- 查看从库的应用进度
+SELECT thread#, sequence#, applied, completion_time  
+FROM v$archived_log 
+ORDER BY sequence# DESC;
+
+-- 在主库上查看Data Guard配置
+SELECT db_unique_name, database_role, open_mode FROM v$database;
+
+-- 检查Data Guard传输状态
+SELECT * FROM v$dataguard_stats;
+
+-- 查看standby日志应用状态
+SELECT process, status, thread#, sequence#, block#, blocks 
+FROM v$managed_recovery_progress;
+
+-- 检查保护模式
+SELECT protection_mode, protection_level FROM v$database;
 ```
 
 Docker中的Oracle的安装位置是`/opt/oracle/app/product/11.2.0/dbhome_1/`，查询状态
