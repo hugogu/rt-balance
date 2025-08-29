@@ -33,9 +33,40 @@ services:
     environment:
       - POSTGRES_DB=account
       - POSTGRES_PASSWORD=postgres
-    command: [ "postgres", "-c", "wal_level=logical" ]
+      - POSTGRES_USER=postgres
     volumes:
       - ./tmp/pgdata:/var/lib/postgresql/data
+    restart: unless-stopped
+  # Logical replication replica CDC and big queries.
+  postgres-replica:
+    image: "postgres:17-alpine"
+    hostname: postgres-replica
+    ports:
+      - "5433:5432"
+    environment:
+      - POSTGRES_DB=account
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_USER=postgres
+    volumes:
+      - ./tmp/pgdata-replica:/var/lib/postgresql/data
+    depends_on:
+      - postgres
+    restart: unless-stopped
+  # Physical replication slave for high availability setup.
+  postgres-slave:
+    image: "postgres:17-alpine"
+    hostname: postgres-slave
+    ports:
+      - "5434:5432"
+    environment:
+      - POSTGRES_DB=account
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_USER=postgres
+    volumes:
+      - ./tmp/pgdata-slave:/var/lib/postgresql/data
+    depends_on:
+      - postgres
+    restart: unless-stopped
 
   connect:
     # Only 3.0 support PG 17.0
