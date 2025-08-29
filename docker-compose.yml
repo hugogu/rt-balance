@@ -36,7 +36,13 @@ services:
       - POSTGRES_USER=postgres
     volumes:
       - ./tmp/pgdata:/var/lib/postgresql/data
+      - ./scripts/postgres-init.sh:/docker-entrypoint-initdb.d/postgres-init.sh
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
   # Logical replication replica CDC and big queries.
   postgres-replica:
     image: "postgres:17-alpine"
@@ -49,9 +55,50 @@ services:
       - POSTGRES_USER=postgres
     volumes:
       - ./tmp/pgdata-replica:/var/lib/postgresql/data
+      - ./scripts/postgres-replica-init.sh:/docker-entrypoint-initdb.d/postgres-replica-init.sh
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # Physical replication slave setup service
+  postgres-slave-setup:
+    image: "postgres:17-alpine"
+    hostname: postgres-slave-setup
+    environment:
+      - POSTGRES_DB=account
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_USER=postgres
+    volumes:
+      - ./tmp/pgdata-slave:/var/lib/postgresql/data
+    command: >
+      sh -c "
+        until pg_isready -h postgres -U postgres; do
+          echo 'Waiting for primary to be ready...'
+          sleep 2
+        done
+        sleep 5
+        # 等待主库创建复制用户
+        until PGPASSWORD=replicator psql -h postgres -U replicator -d account -c 'SELECT 1;' > /dev/null 2>&1; do
+          echo 'Waiting for replication user to be created...'
+          sleep 2
+        done
+        # 执行pg_basebackup
+        rm -rf /var/lib/postgresql/data/*
+        PGPASSWORD=replicator pg_basebackup -h postgres -p 5432 -U replicator -D /var/lib/postgresql/data -Fp -Xs -R -P --slot=physical_slot
+        echo 'hot_standby = on' >> /var/lib/postgresql/data/postgresql.conf
+        touch /var/lib/postgresql/data/standby.signal
+      "
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: "no"
+
   # Physical replication slave for high availability setup.
   postgres-slave:
     image: "postgres:17-alpine"
@@ -65,8 +112,13 @@ services:
     volumes:
       - ./tmp/pgdata-slave:/var/lib/postgresql/data
     depends_on:
-      - postgres
+      - postgres-slave-setup
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
   connect:
     # Only 3.0 support PG 17.0
