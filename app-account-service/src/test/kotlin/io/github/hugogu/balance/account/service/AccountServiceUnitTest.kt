@@ -19,8 +19,6 @@ import org.mockito.kotlin.any
 import org.springframework.boot.test.mock.mockito.MockBean
 import org.springframework.context.ApplicationEventPublisher
 import org.springframework.core.task.SyncTaskExecutor
-import org.springframework.data.redis.core.RedisOperations
-import org.springframework.data.redis.core.ValueOperations
 import org.springframework.kafka.core.KafkaOperations
 import org.springframework.test.context.junit.jupiter.SpringExtension
 import java.math.BigDecimal
@@ -44,10 +42,7 @@ class AccountServiceUnitTest {
     private lateinit var outboxRepo: OutboxRepo
 
     @MockBean
-    private lateinit var redisOperations: RedisOperations<String, String>
-
-    @MockBean
-    private lateinit var valueOperations: ValueOperations<String, String>
+    private lateinit var distributedLock: DistributedLockService
 
     @MockBean
     private lateinit var eventPublisher: ApplicationEventPublisher
@@ -61,10 +56,16 @@ class AccountServiceUnitTest {
 
     @BeforeEach
     fun setupMock() {
-        whenever(redisOperations.opsForValue()).thenReturn(valueOperations)
+        // Default behaviour for the lock: just execute the action inline.
+        // Individual tests can override to simulate contention.
+        whenever(distributedLock.executeWithLock(any(), any<Duration>(), any())).thenAnswer { invocation ->
+            val action = invocation.arguments[2] as () -> Any?
+            @Suppress("UNCHECKED_CAST")
+            action() as Any?
+        }
+
         whenever(accountRepo.save(any())).thenAnswer { it.arguments[0] }
         whenever(transactionLog.save(any())).thenAnswer { it.arguments[0] }
-        whenever(valueOperations.setIfAbsent(any(), any(), any())).thenReturn(true)
         whenever(kafkaOperations.send(any(), any(), any())).thenAnswer {
             transactionProcessor.onReceivingPendingTransaction(it.arguments[2] as TransactionMessage)
             CompletableFuture.completedFuture(null)
@@ -77,7 +78,7 @@ class AccountServiceUnitTest {
         accountService = AccountService(
             accountRepo,
             transactionLog,
-            redisOperations,
+            distributedLock,
             eventPublisher,
             Duration.ofSeconds(10)
         )
@@ -172,6 +173,35 @@ class AccountServiceUnitTest {
         assertEquals(BigDecimal("11"), updatedAccount.balance)
     }
 
+    /**
+     * When the distributed lock is contended, the inner action must NOT be invoked,
+     * and a [ConcurrentModificationException] must surface — this preserves the
+     * "no double-write under contention" contract that the previous Redis SET-NX
+     * implementation relied on. The new Redisson-backed lock has the same
+     * observable behaviour for callers (and therefore the same HTTP 429 mapping
+     * in [io.github.hugogu.balance.common.error.ApiErrorHandlingAdvice]).
+     */
+    @Test
+    fun debitAccountUnderContentionShouldFailFast() {
+        val accountId = UUID.randomUUID()
+        val account = AccountEntity().apply {
+            setId(accountId)
+            balance = BigDecimal.TEN
+        }
+        whenever(accountRepo.findById(eq(accountId))).thenReturn(Optional.of(account))
+        whenever(distributedLock.executeWithLock(any(), any<Duration>(), any())).thenAnswer {
+            throw ConcurrentModificationException("LockKey request-lock:... is already being processed")
+        }
+
+        val ex = kotlin.runCatching {
+            accountService.debitAccount(accountId, BigDecimal.ONE, UUID.randomUUID())
+        }.exceptionOrNull()
+
+        assertEquals(ConcurrentModificationException::class.java, ex?.javaClass)
+        // Side-effect must not have happened.
+        assertEquals(BigDecimal.TEN, account.balance)
+    }
+
     private fun buildAccountPair(): Pair<AccountEntity, AccountEntity> {
         val fromId = UUID.randomUUID()
         val toId = UUID.randomUUID()
@@ -186,4 +216,3 @@ class AccountServiceUnitTest {
         return fromAccount to toAccount
     }
 }
-

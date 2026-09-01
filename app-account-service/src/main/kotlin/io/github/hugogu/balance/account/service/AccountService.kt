@@ -22,7 +22,6 @@ import org.springframework.context.ApplicationEventPublisher
 import org.springframework.dao.NonTransientDataAccessException
 import org.springframework.dao.TransientDataAccessException
 import org.springframework.data.jpa.repository.Lock
-import org.springframework.data.redis.core.RedisOperations
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.retry.annotation.Retryable
 import org.springframework.stereotype.Service
@@ -42,11 +41,10 @@ typealias AccountPair = Pair<AccountEntity, AccountEntity>
 class AccountService(
     private val accountRepo: AccountRepo,
     private val transactionLogRepo: TransactionLogRepo,
-    redisOperations: RedisOperations<String, String>,
+    private val distributedLock: DistributedLockService,
     private val eventPublisher: ApplicationEventPublisher,
     @Value("\${service.lock.timeout}") private val lockTimeout: Duration
 ) {
-    private val valueOperations = redisOperations.opsForValue()
 
     @Transactional
     fun createAccount(
@@ -190,16 +188,7 @@ class AccountService(
     }
 
     private fun <T> processWithLock(lockKey: String, action: () -> T): T {
-        val isLocked = valueOperations.setIfAbsent(lockKey, "locked", lockTimeout)
-        if (isLocked == true) {
-            try {
-                return action()
-            } finally {
-                valueOperations.getAndDelete(lockKey)
-            }
-        } else {
-            throw ConcurrentModificationException("LockKey $lockKey is already being processed")
-        }
+        return distributedLock.executeWithLock(lockKey, lockTimeout, action)
     }
 
     companion object {
